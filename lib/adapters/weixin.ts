@@ -33,14 +33,19 @@ export const weixinAdapter: Adapter = {
     if (digest) setNativeValue(digest, [...stripMarkdown(task.markdown)].slice(0, 120).join(''));
 
     // 2. 正文:向 UEditor 同源 iframe 的 body 派发合成粘贴
+    let body: HTMLElement;
     try {
-      const body = await waitFor(() => {
+      body = await waitFor(() => {
         const iframe = document.querySelector<HTMLIFrameElement>(SELECTORS.editorIframe);
         return iframe?.contentDocument?.body ?? null;
       });
+    } catch {
+      return { ok: false, failedStep: '填正文', reason: '编辑器 iframe 无法访问(跨域/沙箱或选择器失效)' };
+    }
+    try {
       const imageMap = Object.fromEntries(task.images.map((i) => [i.filename, i.dataUrl]));
       pasteHtml(body, renderHtml(task.markdown, imageMap));
-      await waitFor(() => (body.textContent ?? '').trim().length > 0 || null);
+      await waitFor(() => ((body.textContent ?? '').trim().length > 0 ? body : null));
     } catch {
       return { ok: false, failedStep: '填正文', reason: '编辑器 iframe 未接受粘贴内容' };
     }

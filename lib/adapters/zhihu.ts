@@ -33,7 +33,7 @@ export const zhihuAdapter: Adapter = {
       const imageMap = Object.fromEntries(task.images.map((i) => [i.filename, i.dataUrl]));
       pasteHtml(editor, renderHtml(task.markdown, imageMap));
       // 只有编辑器里真的出现内容才算成功(spec:状态真实回报)
-      await waitFor(() => (editor.textContent ?? '').trim().length > 0 || null);
+      await waitFor(() => ((editor.textContent ?? '').trim().length > 0 ? editor : null));
     } catch {
       return { ok: false, failedStep: '填正文', reason: '编辑器未接受粘贴内容' };
     }
