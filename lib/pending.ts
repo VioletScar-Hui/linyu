@@ -16,7 +16,9 @@ export async function setPending(platform: PlatformId, taskId: string): Promise<
   await browser.storage.local.set({ [KEY]: map });
 }
 
-/** 一次性认领:返回 taskId 并删除登记 */
+/** 一次性认领:返回 taskId 并删除登记。
+ *  已知限制:读-改-写非原子,同平台两个编辑页同一时刻认领可能都拿到任务;
+ *  单人使用场景概率极低,V1 接受。 */
 export async function claimPending(platform: PlatformId): Promise<string | null> {
   const map = await read();
   const taskId = map[platform];

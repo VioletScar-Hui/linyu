@@ -19,8 +19,13 @@ export default defineBackground(() => {
       } else if (msg.kind === 'report-fill') {
         await updatePlatformStatus(msg.taskId, msg.platformId, msg.status);
         sendResponse({});
+      } else {
+        sendResponse({}); // 未知消息:直接应答,避免端口悬挂
       }
-    })();
+    })().catch((err) => {
+      console.error('[background] message handler error', err);
+      sendResponse({ error: String(err) }); // 故障路径兜底,避免发送方挂起
+    });
     return true; // 异步 sendResponse
   });
 });

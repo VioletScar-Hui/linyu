@@ -1,6 +1,8 @@
 import type { PlatformId } from './platforms';
 import type { Task, PlatformStatus } from './tasks';
 
+// 所有发送方均为本插件页面(manifest 无 externally_connectable),消息形状仅靠 TS 约束。
+
 /** composer → background:发起填充(登记并打开平台页) */
 export interface StartFillMsg {
   kind: 'start-fill';
