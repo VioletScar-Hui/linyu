@@ -7,7 +7,7 @@ export async function waitFor<T>(
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const v = get();
-    if (v) return v as T;
+    if (v !== null && v !== undefined && v !== false) return v as T;
     if (Date.now() > deadline) throw new Error('等待页面元素超时');
     await new Promise((r) => setTimeout(r, intervalMs));
   }

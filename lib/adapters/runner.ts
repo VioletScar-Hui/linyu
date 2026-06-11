@@ -14,13 +14,15 @@ export async function runAdapter(adapter: Adapter): Promise<void> {
   const task = resp?.task;
   if (!task) return;
 
-  const report = (status: PlatformStatus) =>
-    browser.runtime.sendMessage({
+  const report = async (status: PlatformStatus) => {
+    const resp = (await browser.runtime.sendMessage({
       kind: 'report-fill',
       platformId: adapter.platformId,
       taskId: task.id,
       status,
-    } satisfies Msg);
+    } satisfies Msg)) as { error?: string } | undefined;
+    if (resp?.error) console.warn('[adapter] 状态回报失败:', resp.error);
+  };
 
   try {
     if (!(await adapter.checkLogin())) {

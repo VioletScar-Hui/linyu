@@ -10,6 +10,9 @@ describe('waitFor', () => {
   it('超时 reject', async () => {
     await expect(waitFor(() => null, 100, 10)).rejects.toThrow('超时');
   });
+  it('空字符串等假值但非 null/false 也能 resolve', async () => {
+    expect(await waitFor(() => '', 1000, 10)).toBe('');
+  });
 });
 
 describe('dataUrlToFile', () => {
