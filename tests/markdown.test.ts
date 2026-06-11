@@ -22,6 +22,13 @@ describe('renderHtml', () => {
   it('不放行内嵌 HTML(防注入)', () => {
     expect(renderHtml('<script>alert(1)</script>', {})).not.toContain('<script>');
   });
+
+  it('多次调用 imageMap 互不串扰', () => {
+    const h1 = renderHtml('![](a.png)', { 'a.png': 'data:first' });
+    const h2 = renderHtml('![](a.png)', {});
+    expect(h1).toContain('data:first');
+    expect(h2).toContain('src="a.png"');
+  });
 });
 
 describe('deriveTitle', () => {
@@ -30,5 +37,8 @@ describe('deriveTitle', () => {
   });
   it('无标题时返回空串', () => {
     expect(deriveTitle('没有标题的正文')).toBe('');
+  });
+  it('二级标题也可作为标题', () => {
+    expect(deriveTitle('前言\n## 副标题\n正文')).toBe('副标题');
   });
 });
