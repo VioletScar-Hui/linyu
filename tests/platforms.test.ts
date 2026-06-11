@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { PLATFORMS, getPlatform, type PlatformId } from '../lib/platforms';
 
 describe('platforms', () => {
-  it('共 7 个平台,其中 4 个支持自动填充', () => {
+  it('全部 7 个平台均支持自动填充(V2)', () => {
     expect(PLATFORMS).toHaveLength(7);
-    expect(PLATFORMS.filter((p) => p.supportsFill).map((p) => p.id)).toEqual([
-      'weixin', 'zhihu', 'woshipm', 'xiaohongshu',
-    ]);
+    expect(PLATFORMS.every((p) => p.supportsFill)).toBe(true);
   });
 
   it('publishUrl 均为 https', () => {

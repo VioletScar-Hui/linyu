@@ -38,3 +38,20 @@
 - [ ] 图片:多图全部上传成功,顺序与撰写页一致
 - [ ] 标题/正文:变体文案正确写入,20/1000 字限内
 - [ ] 失败兜底:复制富文本(纯文本部分)可手动粘贴
+
+
+## B站专栏(member.bilibili.com/platform/upload/text/edit)
+
+- [x] 实测(2026-06):编辑器在同源 iframe(src 含 read-editor)内;标题 textarea.title-input__inner,正文 .tiptap.ProseMirror,粘贴文本/图片成功、保存草稿成功
+- [ ] 标题+正文:格式保留
+- [ ] 图片:粘入后显示;发布前在编辑器内逐张确认是否需重传(B站不自动转存粘贴图)
+
+## X(x.com/compose/post)
+
+- [x] 实测(2026-06):compose 为 Draft.js([data-testid=tweetTextarea_0]),图片 input[data-testid=fileInput];文本+图片注入成功
+- [ ] 推文变体≤280;配图出现在预览;补链接后发布
+
+## Reddit(old.reddit.com/submit)
+
+- [ ] 待实测:主站被工具拦截,适配器按 old.reddit 经典表单(textarea[name=title]/[name=text])编写,首次使用请 DevTools 核对选择器
+- [ ] 标题+Markdown 正文写入;选 subreddit 后发布

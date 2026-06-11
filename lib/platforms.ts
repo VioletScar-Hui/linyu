@@ -16,9 +16,9 @@ export const PLATFORMS: readonly Platform[] = [
   { id: 'zhihu', name: '知乎', publishUrl: 'https://zhuanlan.zhihu.com/write', supportsFill: true },
   { id: 'woshipm', name: '人人都是产品经理', publishUrl: 'https://www.woshipm.com/writing', supportsFill: true },
   { id: 'xiaohongshu', name: '小红书', publishUrl: 'https://creator.xiaohongshu.com/publish/publish', supportsFill: true },
-  { id: 'bilibili', name: 'B站专栏', publishUrl: 'https://member.bilibili.com/platform/upload/text/edit', supportsFill: false },
-  { id: 'x', name: 'X', publishUrl: 'https://x.com/compose/post', supportsFill: false },
-  { id: 'reddit', name: 'Reddit', publishUrl: 'https://www.reddit.com/submit', supportsFill: false },
+  { id: 'bilibili', name: 'B站专栏', publishUrl: 'https://member.bilibili.com/platform/upload/text/edit', supportsFill: true },
+  { id: 'x', name: 'X', publishUrl: 'https://x.com/compose/post', supportsFill: true },
+  { id: 'reddit', name: 'Reddit', publishUrl: 'https://old.reddit.com/submit?selftext=true', supportsFill: true },
 ];
 
 export function getPlatform(id: PlatformId): Platform | undefined {
