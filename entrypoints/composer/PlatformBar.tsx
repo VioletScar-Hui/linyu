@@ -5,7 +5,7 @@ import type { Task, PlatformStatus } from '../../lib/tasks';
 function StatusBadge({ status }: { status?: PlatformStatus }) {
   if (!status) return null;
   if (status.state === 'pending')
-    return <span>⏳ 等待填充…(若平台要求登录,请登录后进入编辑器,会自动继续)</span>;
+    return <span>⏳ 等待填充…(需登录;若编辑器页已开着,请刷新该页触发填充)</span>;
   if (status.state === 'filled')
     return <span style={{ color: 'green' }}>✅ 已填充,请人工检查后发布{status.note ? `(${status.note})` : ''}</span>;
   return <span style={{ color: 'red' }}>❌ {status.reason}</span>;

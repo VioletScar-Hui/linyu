@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderHtml, deriveTitle } from '../lib/markdown';
+import { renderHtml, deriveTitle, renderSegments } from '../lib/markdown';
 
 describe('renderHtml', () => {
   it('基本 Markdown 转 HTML', () => {
@@ -40,5 +40,34 @@ describe('deriveTitle', () => {
   });
   it('二级标题也可作为标题', () => {
     expect(deriveTitle('前言\n## 副标题\n正文')).toBe('副标题');
+  });
+});
+
+describe('renderSegments', () => {
+  it('本地图片单独成段,文本段在前后', () => {
+    const segs = renderSegments('开头\n\n![图](a.png)\n\n结尾', ['a.png']);
+    expect(segs).toEqual([
+      { kind: 'html', html: expect.stringContaining('开头') },
+      { kind: 'image', filename: 'a.png' },
+      { kind: 'html', html: expect.stringContaining('结尾') },
+    ]);
+  });
+
+  it('远程图保留在 HTML 段中,不拆段', () => {
+    const segs = renderSegments('![](https://cdn.com/c.png)', []);
+    expect(segs).toHaveLength(1);
+    expect(segs[0]).toMatchObject({ kind: 'html' });
+    expect((segs[0] as { html: string }).html).toContain('https://cdn.com/c.png');
+  });
+
+  it('未匹配的本地引用保留原样不拆段', () => {
+    const segs = renderSegments('![](miss.png)', []);
+    expect(segs).toHaveLength(1);
+    expect((segs[0] as { html: string }).html).toContain('miss.png');
+  });
+
+  it('连续两张图产生两个图片段,无空文本段', () => {
+    const segs = renderSegments('![](a.png)\n\n![](b.png)', ['a.png', 'b.png']);
+    expect(segs.map((s) => s.kind)).toEqual(['image', 'image']);
   });
 });

@@ -62,11 +62,26 @@ export function setInputFiles(input: HTMLInputElement, files: File[]): void {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-/** 按可见文本找元素(用于无稳定选择器的按钮/页签) */
-export function findByText(selector: string, text: string): HTMLElement | null {
-  return (
-    Array.from(document.querySelectorAll<HTMLElement>(selector)).find((el) =>
-      el.textContent?.includes(text),
-    ) ?? null
+/** 等待固定时长(SPA 渲染过渡等无信号场景) */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** 向富文本编辑器派发携带 File 列表的合成粘贴事件(供知乎图片上传) */
+export function pasteFiles(target: HTMLElement, files: File[]): void {
+  const dt = new DataTransfer();
+  for (const f of files) dt.items.add(f);
+  target.focus();
+  target.dispatchEvent(
+    new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }),
   );
+}
+
+/** 按可见文本找元素:精确匹配 trim 后的全文,返回最深的匹配节点。
+ *  (includes 匹配会先命中最外层容器,点击无效 —— 小红书页签实测教训) */
+export function findByText(selector: string, text: string): HTMLElement | null {
+  const matches = Array.from(document.querySelectorAll<HTMLElement>(selector)).filter(
+    (el) => (el.textContent ?? '').trim() === text,
+  );
+  return matches.length > 0 ? matches[matches.length - 1] : null;
 }

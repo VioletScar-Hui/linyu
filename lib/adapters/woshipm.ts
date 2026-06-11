@@ -3,14 +3,13 @@ import type { Task } from '../tasks';
 import { renderHtml } from '../markdown';
 import { waitFor, pasteHtml, setNativeValue } from './fill-utils';
 
-// —— 以下常量为通用默认值,须按真实创作后台实测核对/更新(见验收清单 Step 1) ——
-// 锚定到路径首段,避免在文章页(如 /it/123.html?from=post)误判并消耗一次性任务
-const EDITOR_PATH_RE = /^\/(?:write|post|tougao|contribute)(?:\/|$|[?#])/i;
+// —— 2026-06 实测:发文章入口 https://www.woshipm.com/writing,WordPress+TinyMCE ——
+const EDITOR_PATH_RE = /^\/writing(?:\/|$|[?#])/i;
 const SELECTORS = {
-  title: 'input[placeholder*="标题"], #title, .post-title input',
-  // 注意:若页面有多个 contenteditable(标题区/标签框等),需换更精确的祖先路径选择器
+  title: '#post_title',
+  // 实测页面无顶层 contenteditable,正文在 TinyMCE 同源 iframe 内
   editor: 'div[contenteditable="true"], .ql-editor',
-  editorIframe: 'iframe[id^="ueditor"], iframe.ke-edit-iframe',
+  editorIframe: '#post_content_ifr, iframe[id^="ueditor"], iframe.ke-edit-iframe',
 };
 
 /** 先找直接 contenteditable,再找 iframe 型编辑器(UEditor/KindEditor) */
@@ -49,6 +48,6 @@ export const woshipmAdapter: Adapter = {
     } catch {
       return { ok: false, failedStep: '填正文', reason: '编辑器未接受粘贴内容' };
     }
-    return { ok: true, note: '投稿有人工审核,请按平台要求补充分类/标签后提交' };
+    return { ok: true, note: '图片由 TinyMCE 转存(保存草稿后请刷新核对),投稿有人工审核' };
   },
 };

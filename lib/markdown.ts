@@ -26,3 +26,40 @@ export function deriveTitle(markdown: string): string {
   const m = markdown.match(/^#{1,2}\s+(.+)$/m);
   return m ? m[1].trim() : '';
 }
+
+export type ContentSegment =
+  | { kind: 'html'; html: string }
+  | { kind: 'image'; filename: string };
+
+const LOCAL_IMG_PREFIX = 'local-image://';
+
+/** 渲染为"文本段+本地图片"序列:本地图单独成段(供逐段粘贴,图片走文件粘贴上传),
+ *  远程图保留在 HTML 段中。 */
+export function renderSegments(markdown: string, localFilenames: string[]): ContentSegment[] {
+  const imageMap = Object.fromEntries(localFilenames.map((f) => [f, `${LOCAL_IMG_PREFIX}${f}`]));
+  const html = renderHtml(markdown, imageMap);
+  const segments: ContentSegment[] = [];
+  const re = /<img\b[^>]*src="local-image:\/\/([^"]+)"[^>]*>/g;
+  let last = 0;
+  for (const m of html.matchAll(re)) {
+    const before = html.slice(last, m.index);
+    if (hasContent(before)) segments.push({ kind: 'html', html: before });
+    segments.push({ kind: 'image', filename: m[1] });
+    last = (m.index ?? 0) + m[0].length;
+  }
+  const tail = html.slice(last);
+  if (hasContent(tail)) segments.push({ kind: 'html', html: tail });
+  return segments;
+}
+
+/** 剥去所有标签和空白后返回剩余文字;若只剩空白(含纯包裹标签)则返回空串 */
+function stripEmptyHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, '').trim();
+}
+
+/** 片段是否含有实质内容:有非空文本 OR 有自闭合媒体/嵌入标签 */
+function hasContent(html: string): boolean {
+  if (stripEmptyHtml(html)) return true;
+  // 保留含 <img> / <video> / <audio> / <iframe> 等自闭合/媒体标签的片段
+  return /<(?:img|video|audio|iframe|source|embed)\b/i.test(html);
+}
