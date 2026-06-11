@@ -4,8 +4,12 @@ import { setPending, claimPending } from '../lib/pending';
 import type { Msg, ClaimTaskResponse } from '../lib/messaging';
 
 export default defineBackground(() => {
+  // 串行化所有消息处理:storage 的读-改-写非原子,并发处理(如快速连点两个"去发布")
+  // 会互相覆盖 pendingFills/tasks。单队列让写入按到达顺序依次执行。
+  let queue: Promise<void> = Promise.resolve();
+
   browser.runtime.onMessage.addListener((msg: Msg, _sender, sendResponse) => {
-    (async () => {
+    queue = queue.then(async () => {
       if (msg.kind === 'start-fill') {
         await setPending(msg.platformId, msg.taskId);
         await updatePlatformStatus(msg.taskId, msg.platformId, { state: 'pending' });
@@ -22,7 +26,7 @@ export default defineBackground(() => {
       } else {
         sendResponse({}); // 未知消息:直接应答,避免端口悬挂
       }
-    })().catch((err) => {
+    }).catch((err) => {
       console.error('[background] message handler error', err);
       sendResponse({ error: String(err) }); // 故障路径兜底,避免发送方挂起
     });
