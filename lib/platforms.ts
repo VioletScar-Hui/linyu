@@ -11,7 +11,7 @@ export interface Platform {
   supportsFill: boolean;
 }
 
-export const PLATFORMS: Platform[] = [
+export const PLATFORMS: readonly Platform[] = [
   { id: 'weixin', name: '微信公众号', publishUrl: 'https://mp.weixin.qq.com/', supportsFill: true },
   { id: 'zhihu', name: '知乎', publishUrl: 'https://zhuanlan.zhihu.com/write', supportsFill: true },
   { id: 'woshipm', name: '人人都是产品经理', publishUrl: 'https://www.woshipm.com/', supportsFill: true },
