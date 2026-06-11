@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { listTasks, type Task } from '../../lib/tasks';
 
-export function History({ currentId, onLoad }: { currentId: string; onLoad: (t: Task) => void }) {
+export function History({
+  currentId,
+  refreshKey,
+  onLoad,
+}: {
+  currentId: string;
+  refreshKey: number | null;
+  onLoad: (t: Task) => void;
+}) {
   const [tasks, setTasks] = useState<Task[]>([]);
   useEffect(() => {
     void listTasks().then(setTasks);
-  }, [currentId]);
+  }, [currentId, refreshKey]);
 
   return (
     <details>
@@ -13,9 +21,13 @@ export function History({ currentId, onLoad }: { currentId: string; onLoad: (t: 
       <ul>
         {tasks.map((t) => (
           <li key={t.id}>
-            <a href="#" onClick={(e) => { e.preventDefault(); onLoad(t); }}>
+            <button
+              type="button"
+              style={{ background: 'none', border: 'none', color: '#0969da', cursor: 'pointer', padding: 0 }}
+              onClick={() => onLoad(t)}
+            >
               {t.title || '(无标题)'}
-            </a>
+            </button>
             <small> · {new Date(t.createdAt).toLocaleDateString()}</small>
             {t.id === currentId && <small> · 当前</small>}
           </li>

@@ -86,7 +86,7 @@ export function App() {
   return (
     <div style={{ display: 'flex', gap: 16, padding: 16, fontFamily: 'system-ui' }}>
       <section style={{ flex: 1, minWidth: 0 }}>
-        <History currentId={task.id} onLoad={setTask} />
+        <History currentId={task.id} refreshKey={savedAt} onLoad={setTask} />
         <button type="button" onClick={() => setTask(newTask({ title: '', markdown: '' }))}>＋ 新文章</button>
 
         <h2>① 文章</h2>
