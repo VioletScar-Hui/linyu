@@ -17,7 +17,7 @@ function Popup() {
           style={{ display: 'block', width: '100%', padding: 6, marginBottom: 4, textAlign: 'left' }}
           onClick={() => open(p.publishUrl)}
         >
-          {p.name} {p.supportsFill ? '· 支持自动填充' : ''}
+          {p.name}{p.supportsFill ? ' · 支持自动填充' : ''}
         </button>
       ))}
     </div>
