@@ -27,4 +27,13 @@ export interface ReportFillMsg {
   status: PlatformStatus;
 }
 
-export type Msg = StartFillMsg | ClaimTaskMsg | ReportFillMsg;
+/** content script → background:只读探测本平台是否有待填充任务(不消耗) */
+export interface PeekTaskMsg {
+  kind: 'peek-task';
+  platformId: PlatformId;
+}
+export interface PeekTaskResponse {
+  hasPending: boolean;
+}
+
+export type Msg = StartFillMsg | ClaimTaskMsg | ReportFillMsg | PeekTaskMsg;

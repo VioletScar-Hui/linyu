@@ -16,6 +16,12 @@ export async function setPending(platform: PlatformId, taskId: string): Promise<
   await browser.storage.local.set({ [KEY]: map });
 }
 
+/** 只读查询:该平台是否有待填充任务(不消耗登记)。供"非编辑器页自动跳转编辑器"前探测用。 */
+export async function peekPending(platform: PlatformId): Promise<string | null> {
+  const map = await read();
+  return map[platform] ?? null;
+}
+
 /** 一次性认领:返回 taskId 并删除登记。
  *  已知限制:storage 读-改-写非原子。background 侧已用单队列串行化自身写入;
  *  残余竞态:(a)同平台两个编辑页同一时刻认领可能都拿到任务;

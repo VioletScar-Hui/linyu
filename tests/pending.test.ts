@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fakeBrowser } from 'wxt/testing';
-import { setPending, claimPending } from '../lib/pending';
+import { setPending, claimPending, peekPending } from '../lib/pending';
 
 beforeEach(() => fakeBrowser.reset());
 
@@ -20,5 +20,12 @@ describe('pending 登记/认领', () => {
 
   it('未登记时 claim 为 null', async () => {
     expect(await claimPending('xiaohongshu')).toBeNull();
+  });
+
+  it('peek 不消耗登记', async () => {
+    await setPending('weixin', 't9');
+    expect(await peekPending('weixin')).toBe('t9');
+    expect(await claimPending('weixin')).toBe('t9'); // 仍可正常认领
+    expect(await peekPending('weixin')).toBeNull();
   });
 });

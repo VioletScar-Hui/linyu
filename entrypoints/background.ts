@@ -1,7 +1,7 @@
 import { getPlatform } from '../lib/platforms';
 import { getTask, updatePlatformStatus } from '../lib/tasks';
-import { setPending, claimPending } from '../lib/pending';
-import type { Msg, ClaimTaskResponse } from '../lib/messaging';
+import { setPending, claimPending, peekPending } from '../lib/pending';
+import type { Msg, ClaimTaskResponse, PeekTaskResponse } from '../lib/messaging';
 
 export default defineBackground(() => {
   // 串行化所有消息处理:storage 的读-改-写非原子,并发处理(如快速连点两个"去发布")
@@ -23,6 +23,9 @@ export default defineBackground(() => {
       } else if (msg.kind === 'report-fill') {
         await updatePlatformStatus(msg.taskId, msg.platformId, msg.status);
         sendResponse({});
+      } else if (msg.kind === 'peek-task') {
+        const taskId = await peekPending(msg.platformId);
+        sendResponse({ hasPending: taskId !== null } satisfies PeekTaskResponse);
       } else {
         sendResponse({}); // 未知消息:直接应答,避免端口悬挂
       }
