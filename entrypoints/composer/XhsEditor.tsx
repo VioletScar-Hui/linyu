@@ -1,17 +1,27 @@
 import { makeXhsVariant } from '../../lib/xhs';
 import type { Task } from '../../lib/tasks';
 
-export function XhsEditor({ task, onChange }: { task: Task; onChange: (t: Task) => void }) {
+interface XhsVariantValue {
+  title: string;
+  body: string;
+}
+
+export function XhsEditor({
+  task,
+  onChangeVariant,
+}: {
+  task: Task;
+  onChangeVariant: (v: XhsVariantValue) => void;
+}) {
   const v = task.variants.xiaohongshu ?? { title: '', body: '' };
-  const set = (patch: Partial<typeof v>) =>
-    onChange({ ...task, variants: { ...task.variants, xiaohongshu: { ...v, ...patch } } });
+  const set = (patch: Partial<XhsVariantValue>) => onChangeVariant({ ...v, ...patch });
   const titleLen = [...v.title].length;
   const bodyLen = [...v.body].length;
 
   return (
     <details>
       <summary><strong>小红书变体</strong>(标题≤20字,正文≤1000字)</summary>
-      <button onClick={() => onChange({ ...task, variants: { ...task.variants, xiaohongshu: makeXhsVariant(task.title, task.markdown) } })}>
+      <button type="button" onClick={() => onChangeVariant(makeXhsVariant(task.title, task.markdown))}>
         从文章生成初稿
       </button>
       <input

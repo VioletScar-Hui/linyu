@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { deriveTitle } from '../../lib/markdown';
+import { deriveTitle, renderHtml } from '../../lib/markdown';
 import { extractImageRefs, matchImages } from '../../lib/images';
-import { newTask, saveTask, type Task, type TaskImage } from '../../lib/tasks';
+import { stripMarkdown } from '../../lib/xhs';
+import { copyRichText } from '../../lib/clipboard';
+import { newTask, saveTask, getTask, type Task, type TaskImage } from '../../lib/tasks';
 import { Preview } from './Preview';
 import { XhsEditor } from './XhsEditor';
+import { PlatformBar } from './PlatformBar';
+import { History } from './History';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
@@ -26,12 +30,24 @@ export function App() {
     latestTask.current = task;
   }, [task]);
 
+  // 适配器回报状态写入 storage 后,刷新当前任务的 platformStatus(不覆盖未保存的编辑)
+  useEffect(() => {
+    const listener = (changes: Record<string, unknown>, area: string) => {
+      if (area !== 'local' || !('tasks' in changes)) return;
+      void getTask(task.id).then((fresh) => {
+        if (fresh) setTask((t) => ({ ...t, platformStatus: fresh.platformStatus }));
+      });
+    };
+    browser.storage.onChanged.addListener(listener);
+    return () => browser.storage.onChanged.removeListener(listener);
+  }, [task.id]);
+
   const refs = useMemo(() => extractImageRefs(task.markdown), [task.markdown]);
   const match = useMemo(
     () => matchImages(refs, task.images.map((i) => i.filename)),
     [refs, task.images],
   );
-  const matchedSet = useMemo(() => new Set(match.matched), [match.matched]);
+  const matchedSet = useMemo(() => new Set(match.matched), [match]);
 
   const setMarkdown = (markdown: string) =>
     setTask((t) => ({ ...t, markdown, title: t.title || deriveTitle(markdown) }));
@@ -60,9 +76,19 @@ export function App() {
     setSavedAt(Date.now());
   };
 
+  const copyFallback = async () => {
+    const t = latestTask.current;
+    const imageMap = Object.fromEntries(t.images.map((i) => [i.filename, i.dataUrl]));
+    await copyRichText(renderHtml(t.markdown, imageMap), stripMarkdown(t.markdown));
+    alert('富文本已复制,可直接粘贴到任意平台编辑器');
+  };
+
   return (
     <div style={{ display: 'flex', gap: 16, padding: 16, fontFamily: 'system-ui' }}>
       <section style={{ flex: 1, minWidth: 0 }}>
+        <History currentId={task.id} onLoad={setTask} />
+        <button type="button" onClick={() => setTask(newTask({ title: '', markdown: '' }))}>＋ 新文章</button>
+
         <h2>① 文章</h2>
         <input
           style={{ width: '100%', fontSize: 18, padding: 6 }}
@@ -127,8 +153,9 @@ export function App() {
             封面图(公众号用):
             <select
               value={task.coverFilename ?? ''}
-              onChange={(e) => setTask((t) => ({ ...t, coverFilename: e.target.value }))}
+              onChange={(e) => setTask((t) => ({ ...t, coverFilename: e.target.value || undefined }))}
             >
+              <option value="">(未选择)</option>
               {task.images.map((img) => (
                 <option key={img.filename} value={img.filename}>{img.filename}</option>
               ))}
@@ -137,14 +164,23 @@ export function App() {
         )}
 
         <h2>③ 平台变体</h2>
-        <XhsEditor task={task} onChange={setTask} />
+        <XhsEditor
+          task={task}
+          onChangeVariant={(v) => setTask((t) => ({ ...t, variants: { ...t.variants, xiaohongshu: v } }))}
+        />
 
         <p>
-          <button style={{ padding: '8px 24px', fontWeight: 600 }} onClick={() => void save()}>
+          <button type="button" style={{ padding: '8px 24px', fontWeight: 600 }} onClick={() => void save()}>
             保存任务
           </button>
           {savedAt && <span> 已保存 {new Date(savedAt).toLocaleTimeString()}</span>}
+          <button type="button" style={{ marginLeft: 12 }} onClick={() => void copyFallback()}>
+            复制富文本(手动兜底)
+          </button>
         </p>
+
+        <h2>④ 分发</h2>
+        <PlatformBar task={task} onBeforeFill={save} />
       </section>
 
       <section style={{ flex: 1, minWidth: 0 }}>
