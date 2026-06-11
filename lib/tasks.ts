@@ -20,7 +20,7 @@ export interface Task {
   images: TaskImage[];
   coverFilename?: string;
   /** 平台变体;V2 的 x/reddit 复用此结构 */
-  variants: { xiaohongshu?: { title: string; body: string } };
+  variants: Partial<Record<'xiaohongshu' | 'x' | 'reddit', { title: string; body: string }>>;
   platformStatus: Partial<Record<PlatformId, PlatformStatus>>;
 }
 
@@ -52,8 +52,15 @@ async function writeAll(tasks: Task[]): Promise<void> {
 export async function saveTask(task: Task): Promise<void> {
   const all = await readAll();
   const idx = all.findIndex((t) => t.id === task.id);
-  if (idx >= 0) all[idx] = task;
-  else all.push(task);
+  if (idx >= 0) {
+    // 合并存储中的平台状态(存储侧优先):撰写页用旧内存状态保存时,不冲掉后台写入的状态
+    all[idx] = {
+      ...task,
+      platformStatus: { ...task.platformStatus, ...all[idx].platformStatus },
+    };
+  } else {
+    all.push(task);
+  }
   await writeAll(all);
 }
 
@@ -70,8 +77,10 @@ export async function updatePlatformStatus(
   platform: PlatformId,
   status: PlatformStatus,
 ): Promise<void> {
-  const task = await getTask(id);
+  // 单次读-改-写,不经过 saveTask 的合并(状态更新是权威写入,必须能推进 pending→filled)
+  const all = await readAll();
+  const task = all.find((t) => t.id === id);
   if (!task) return;
   task.platformStatus[platform] = status;
-  await saveTask(task);
+  await writeAll(all);
 }

@@ -34,4 +34,24 @@ describe('tasks 存储', () => {
     await updatePlatformStatus(t.id, 'zhihu', { state: 'failed', reason: '请先登录' });
     expect((await getTask(t.id))?.platformStatus.zhihu).toEqual({ state: 'failed', reason: '请先登录' });
   });
+
+  it('getTask 未知 id 返回 undefined', async () => {
+    expect(await getTask('nonexistent')).toBeUndefined();
+  });
+
+  it('saveTask 不会清掉后台写入的平台状态', async () => {
+    const t = newTask({ title: 'a', markdown: '' });
+    await saveTask(t);
+    await updatePlatformStatus(t.id, 'zhihu', { state: 'pending' });
+    await saveTask({ ...t }); // 撰写页用旧内存状态(无 zhihu)再存
+    expect((await getTask(t.id))?.platformStatus.zhihu).toEqual({ state: 'pending' });
+  });
+
+  it('updatePlatformStatus 可推进状态(pending→filled)', async () => {
+    const t = newTask({ title: 'a', markdown: '' });
+    await saveTask(t);
+    await updatePlatformStatus(t.id, 'zhihu', { state: 'pending' });
+    await updatePlatformStatus(t.id, 'zhihu', { state: 'filled' });
+    expect((await getTask(t.id))?.platformStatus.zhihu).toEqual({ state: 'filled' });
+  });
 });
