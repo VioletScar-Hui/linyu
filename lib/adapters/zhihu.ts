@@ -6,6 +6,7 @@ import { waitFor, pasteHtml, setNativeValue } from './fill-utils';
 // —— 选择器常量:平台改版只改这里。开发时用 DevTools 在真实页面核对! ——
 const SELECTORS = {
   title: 'textarea[placeholder*="标题"]',
+  // 注意:若页面有多个 contenteditable(标题/工具栏等),需换更具体的祖先路径选择器
   editor: 'div[contenteditable="true"]',
 };
 
