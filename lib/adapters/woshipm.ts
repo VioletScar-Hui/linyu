@@ -4,9 +4,11 @@ import { renderHtml } from '../markdown';
 import { waitFor, pasteHtml, setNativeValue } from './fill-utils';
 
 // —— 以下常量为通用默认值,须按真实创作后台实测核对/更新(见验收清单 Step 1) ——
-const EDITOR_PATH_RE = /write|post|tougao|contribute/i;
+// 锚定到路径首段,避免在文章页(如 /it/123.html?from=post)误判并消耗一次性任务
+const EDITOR_PATH_RE = /^\/(?:write|post|tougao|contribute)(?:\/|$|[?#])/i;
 const SELECTORS = {
   title: 'input[placeholder*="标题"], #title, .post-title input',
+  // 注意:若页面有多个 contenteditable(标题区/标签框等),需换更精确的祖先路径选择器
   editor: 'div[contenteditable="true"], .ql-editor',
   editorIframe: 'iframe[id^="ueditor"], iframe.ke-edit-iframe',
 };
@@ -25,8 +27,8 @@ export const woshipmAdapter: Adapter = {
   platformId: 'woshipm',
 
   isEditorPage: () =>
-    location.hostname.endsWith('woshipm.com') &&
-    EDITOR_PATH_RE.test(location.pathname + location.search),
+    (location.hostname === 'woshipm.com' || location.hostname.endsWith('.woshipm.com')) &&
+    EDITOR_PATH_RE.test(location.pathname),
 
   checkLogin: async () => true, // 进得了创作后台即已登录;若实测发现未登录也可达,在此补真实检测
 
