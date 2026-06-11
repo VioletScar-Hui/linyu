@@ -23,6 +23,14 @@ describe('extractImageRefs', () => {
   it('同名引用去重', () => {
     expect(extractImageRefs('![1](a.png)\n![2](a.png)')).toEqual(['a.png']);
   });
+
+  it('一行多图全部提取', () => {
+    expect(extractImageRefs('![a](a.png) ![b](b.png)')).toEqual(['a.png', 'b.png']);
+  });
+
+  it('单引号标题也能提取', () => {
+    expect(extractImageRefs("![a](a.png 'note')")).toEqual(['a.png']);
+  });
 });
 
 describe('matchImages', () => {
