@@ -1,4 +1,6 @@
-/** 粗粒度去 Markdown 标记,产出小红书可用纯文本 */
+/** 粗粒度去 Markdown 标记,产出小红书可用纯文本。
+ *  覆盖:ATX 标题(#)、无序列表、引用、围栏代码块(```)、图片、链接、强调、行内码。
+ *  不处理:setext 标题、有序列表编号、表格、分隔线、~~~ 围栏 —— 用户会在撰写页人工修订。 */
 export function stripMarkdown(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, '')           // 代码块整体去掉
@@ -7,7 +9,9 @@ export function stripMarkdown(markdown: string): string {
     .replace(/^#{1,6}\s+/gm, '')              // 标题标记
     .replace(/^\s*[-*+]\s+/gm, '')            // 列表标记
     .replace(/^\s*>\s?/gm, '')                // 引用标记
-    .replace(/(\*\*|__|\*|_|`)/g, '')         // 强调/行内码
+    .replace(/`([^`\n]+)`/g, (_m, code: string) => code.replace(/[*_]/g, (c) => ` ${c.charCodeAt(0)} `)) // 行内码:去反引号,暂存 */_
+    .replace(/(\*\*|__|\*|_)/g, '')           // 强调标记
+    .replace(/ (\d+) /g, (_m, d: string) => String.fromCharCode(Number(d))) // 还原行内码中的 */_
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

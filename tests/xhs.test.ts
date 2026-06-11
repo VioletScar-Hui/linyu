@@ -10,6 +10,9 @@ describe('stripMarkdown', () => {
     expect(text).toContain('链接');
     expect(text).toContain('列表项');
   });
+  it('行内码保留代码文字', () => {
+    expect(stripMarkdown('调用 `*args` 即可')).toBe('调用 *args 即可');
+  });
 });
 
 describe('makeXhsVariant', () => {
@@ -21,5 +24,10 @@ describe('makeXhsVariant', () => {
     const v = makeXhsVariant('题', '# 头\n\n' + '字'.repeat(2000));
     expect([...v.body].length).toBeLessThanOrEqual(1000);
     expect(v.body).not.toContain('#');
+  });
+  it('正文按码点截断,不劈开 emoji', () => {
+    const v = makeXhsVariant('题', '🎉'.repeat(1500));
+    expect([...v.body]).toHaveLength(1000);
+    expect(v.body.at(-1)).not.toBe('�');
   });
 });
