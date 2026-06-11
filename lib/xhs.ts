@@ -9,9 +9,10 @@ export function stripMarkdown(markdown: string): string {
     .replace(/^#{1,6}\s+/gm, '')              // 标题标记
     .replace(/^\s*[-*+]\s+/gm, '')            // 列表标记
     .replace(/^\s*>\s?/gm, '')                // 引用标记
-    .replace(/`([^`\n]+)`/g, (_m, code: string) => code.replace(/[*_]/g, (c) => ` ${c.charCodeAt(0)} `)) // 行内码:去反引号,暂存 */_
+    .replace(/`([^`\n]+)`/g, (_m, code: string) =>
+      code.replace(/\*/g, '\x01').replace(/_/g, '\x02')) // 行内码:去反引号,*/_ 暂存为哨兵
     .replace(/(\*\*|__|\*|_)/g, '')           // 强调标记
-    .replace(/ (\d+) /g, (_m, d: string) => String.fromCharCode(Number(d))) // 还原行内码中的 */_
+    .replace(/\x01/g, '*').replace(/\x02/g, '_') // 还原行内码中的 */_
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

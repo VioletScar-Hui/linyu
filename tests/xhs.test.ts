@@ -13,6 +13,9 @@ describe('stripMarkdown', () => {
   it('行内码保留代码文字', () => {
     expect(stripMarkdown('调用 `*args` 即可')).toBe('调用 *args 即可');
   });
+  it('正文中独立数字不被误还原', () => {
+    expect(stripMarkdown('今年 95 后超过 42 万人')).toBe('今年 95 后超过 42 万人');
+  });
 });
 
 describe('makeXhsVariant', () => {
