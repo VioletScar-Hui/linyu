@@ -6,7 +6,9 @@ import {
 
 // —— 选择器常量:开发时在 creator.xiaohongshu.com 实测核对! ——
 const SELECTORS = {
-  fileInput: 'input[type="file"]',
+  // 注意:发布页可能同时存在视频/图文两个 file input,优先匹配 accept 带 image 的;
+  // 验收时务必收紧为图文上传容器内的祖先路径选择器
+  fileInput: 'input[type="file"][accept*="image"], input[type="file"]',
   title: 'input[placeholder*="标题"]',
   // 注意:若页面有多个 contenteditable,需换更精确的祖先路径选择器
   editor: 'div[contenteditable="true"]',
@@ -30,6 +32,7 @@ export const xiaohongshuAdapter: Adapter = {
 
     // 1. 发布页默认可能在"上传视频"页签,切到"上传图文"
     findByText('div, span, button', UPLOAD_TAB_TEXT)?.click();
+    await new Promise((r) => setTimeout(r, 300)); // 等待 SPA 页签切换渲染
 
     // 2. 注入图片,驱动平台上传
     try {
@@ -39,19 +42,24 @@ export const xiaohongshuAdapter: Adapter = {
       return { ok: false, failedStep: '上传图片', reason: '找不到图片上传入口(请核对选择器)' };
     }
 
-    // 3. 上传完成后出现标题/正文区(图片上传耗时不可控,该步放宽到 30s)
+    // 3. 标题/正文区出现后填写(图片上传耗时不可控,标题等待放宽到 30s)
+    let title: HTMLInputElement;
     try {
-      const title = await waitFor(
+      title = await waitFor(
         () => document.querySelector<HTMLInputElement>(SELECTORS.title),
         30_000,
       );
-      setNativeValue(title, v.title);
+    } catch {
+      return { ok: false, failedStep: '填标题', reason: '上传后 30 秒内未出现标题框(上传失败或选择器失效)' };
+    }
+    setNativeValue(title, v.title);
+    try {
       const editor = await waitFor(() => document.querySelector<HTMLElement>(SELECTORS.editor));
       pasteText(editor, v.body);
       await waitFor(() => ((editor.textContent ?? '').trim().length > 0 ? editor : null));
     } catch {
-      return { ok: false, failedStep: '填标题/正文', reason: '上传后未出现编辑区或粘贴未生效' };
+      return { ok: false, failedStep: '填正文', reason: '编辑区未出现或粘贴未生效' };
     }
-    return { ok: true, note: '请检查图片顺序与 #话题# 后发布' };
+    return { ok: true, note: '图片可能仍在上传,请确认全部图片出现且顺序正确后再发布' };
   },
 };
