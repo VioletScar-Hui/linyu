@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { deriveTitle, renderHtml } from '../../lib/markdown';
+import { deriveTitle, renderHtml, moveImageBlock } from '../../lib/markdown';
 import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
 import { newTask, saveTask, getTask, type Task, type TaskImage } from '../../lib/tasks';
-import { T, btn, BrandHeader, Card, SectionTitle } from '../../lib/ui';
+import { T, btn, BrandHeader, Card, SectionTitle, LingyuMark } from '../../lib/ui';
 import { Preview } from './Preview';
 import { VariantTabs } from './VariantTabs';
 import { PlatformBar } from './PlatformBar';
 import { History } from './History';
 import { ImageGallery } from './ImageGallery';
+import { ImageEditor } from './ImageEditor';
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -29,6 +30,16 @@ export function App({ initial }: { initial?: Task } = {}) {
   const [task, setTask] = useState<Task>(() => initial ?? newTask({ title: '', markdown: '' }));
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [fullPreview, setFullPreview] = useState(false);
+  const [editingImg, setEditingImg] = useState<TaskImage | null>(null);
+
+  // Esc 退出全屏
+  useEffect(() => {
+    if (!fullPreview) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullPreview(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [fullPreview]);
 
   const latestTask = useRef(task);
   useEffect(() => { latestTask.current = task; }, [task]);
@@ -78,6 +89,14 @@ export function App({ initial }: { initial?: Task } = {}) {
       images: t.images.filter((i) => i.filename !== filename),
       coverFilename: t.coverFilename === filename ? undefined : t.coverFilename,
     }));
+
+  const moveImage = (filename: string, dir: 'up' | 'down') =>
+    setTask((t) => ({ ...t, markdown: moveImageBlock(t.markdown, filename, dir) }));
+
+  const editImageByName = (filename: string) => {
+    const im = latestTask.current.images.find((i) => i.filename === filename);
+    if (im) setEditingImg(im);
+  };
 
   const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2600); };
 
@@ -157,17 +176,61 @@ export function App({ initial }: { initial?: Task } = {}) {
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <div style={{
               padding: '12px 18px', borderBottom: `1px solid ${T.borderSoft}`, display: 'flex',
-              alignItems: 'center', justifyContent: 'space-between',
+              alignItems: 'center', gap: 12,
             }}>
-              <span style={{ fontSize: 13, color: T.textSoft, letterSpacing: 1 }}>实时预览</span>
+              <span style={{ fontSize: 13, color: T.textSoft, letterSpacing: 1, flex: 1 }}>
+                实时预览 · 点击图片可调位置/编辑
+              </span>
               <span style={{ fontSize: 12, color: T.textFaint }}>{[...task.markdown].length} 字</span>
+              <button type="button" onClick={() => setFullPreview(true)}
+                style={{ ...btn.ghost(), padding: '4px 12px', fontSize: 12 }}>⤢ 全屏编辑</button>
             </div>
             <div style={{ padding: 20, maxHeight: 'calc(100vh - 180px)', overflow: 'auto' }}>
-              <Preview task={task} />
+              <Preview task={task} onMoveImage={moveImage} onEditImage={editImageByName} />
             </div>
           </Card>
         </div>
       </div>
+
+      {fullPreview && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 600, background: T.paper,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <header style={{
+            background: T.ink, padding: '12px 24px', display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <LingyuMark size={20} color={T.gold} />
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>全屏编辑</span>
+            <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 12 }}>
+              左侧改 Markdown,右侧即时预览;点击预览图片可调位置/编辑;Esc 退出
+            </span>
+            <button type="button" onClick={() => setFullPreview(false)}
+              style={{ ...btn.gold(), marginLeft: 'auto', padding: '7px 16px', fontSize: 13 }}>退出全屏</button>
+          </header>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 0 }}>
+            <textarea
+              value={task.markdown}
+              onChange={(e) => setMarkdown(e.target.value)}
+              placeholder="在此编辑 Markdown 正文…"
+              style={{
+                border: 'none', outline: 'none', resize: 'none', background: T.card,
+                borderRight: `1px solid ${T.border}`, padding: '24px 28px',
+                fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 13.5,
+                lineHeight: 1.7, color: T.text,
+              }}
+            />
+            <div style={{ overflow: 'auto', padding: '24px 32px' }}>
+              <Preview task={task} onMoveImage={moveImage} onEditImage={editImageByName} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingImg && (
+        <ImageEditor image={editingImg} onClose={() => setEditingImg(null)}
+          onApply={(updated) => { updateImage(editingImg.filename, updated); setEditingImg(null); flash('图片已更新'); }} />
+      )}
 
       {toast && (
         <div style={{

@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { renderHtml, deriveTitle, renderSegments } from '../lib/markdown';
+import { renderHtml, deriveTitle, renderSegments, moveImageBlock } from '../lib/markdown';
+
+describe('moveImageBlock', () => {
+  const md = '段一\n\n![图](./img/a.png)\n\n段二';
+
+  it('下移:图片块与下一块交换', () => {
+    expect(moveImageBlock(md, 'a.png', 'down')).toBe('段一\n\n段二\n\n![图](./img/a.png)');
+  });
+
+  it('上移:图片块与上一块交换', () => {
+    expect(moveImageBlock(md, 'a.png', 'up')).toBe('![图](./img/a.png)\n\n段一\n\n段二');
+  });
+
+  it('已在边界时原样返回', () => {
+    expect(moveImageBlock('![](a.png)\n\n段', 'a.png', 'up')).toBe('![](a.png)\n\n段');
+    expect(moveImageBlock('段\n\n![](a.png)', 'a.png', 'down')).toBe('段\n\n![](a.png)');
+  });
+
+  it('未找到引用时原样返回', () => {
+    expect(moveImageBlock(md, 'miss.png', 'down')).toBe(md);
+  });
+
+  it('本地图渲染带 data-ly-img 标记', () => {
+    const html = renderHtml('![](a.png)', { 'a.png': 'data:x' });
+    expect(html).toContain('data-ly-img="a.png"');
+  });
+});
 
 describe('renderHtml', () => {
   it('基本 Markdown 转 HTML', () => {

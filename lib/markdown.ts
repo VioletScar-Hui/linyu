@@ -9,9 +9,13 @@ md.renderer.rules.image = (tokens, idx, opts, env, self) => {
   const token = tokens[idx];
   const src = token.attrGet('src') ?? '';
   if (!/^(https?:|data:)/i.test(src)) {
+    const name = basename(src);
     const map = (env?.imageMap as Record<string, string> | undefined) ?? {};
-    const mapped = map[basename(src)];
-    if (mapped) token.attrSet('src', mapped);
+    const mapped = map[name];
+    if (mapped) {
+      token.attrSet('src', mapped);
+      token.attrSet('data-ly-img', name); // 供预览面板定位本地图片(移动/编辑)
+    }
   }
   return defaultImage(tokens, idx, opts, env, self);
 };
@@ -50,6 +54,22 @@ export function renderSegments(markdown: string, localFilenames: string[]): Cont
   const tail = html.slice(last);
   if (hasContent(tail)) segments.push({ kind: 'html', html: tail });
   return segments;
+}
+
+/** 把包含指定本地图片引用的 Markdown 块上移/下移一个块(块以空行分隔)。
+ *  找不到引用或已到边界时原样返回。 */
+export function moveImageBlock(markdown: string, filename: string, dir: 'up' | 'down'): string {
+  const blocks = markdown.split(/\n{2,}/);
+  const refRe = /!\[[^\]]*\]\(\s*([^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+  const idx = blocks.findIndex((b) =>
+    [...b.matchAll(refRe)].some((m) => !/^(https?:|data:)/i.test(m[1]) && basename(m[1]) === filename),
+  );
+  if (idx < 0) return markdown;
+  const to = dir === 'up' ? idx - 1 : idx + 1;
+  if (to < 0 || to >= blocks.length) return markdown;
+  const next = [...blocks];
+  [next[idx], next[to]] = [next[to], next[idx]];
+  return next.join('\n\n');
 }
 
 /** 剥去所有标签和空白后返回剩余文字;若只剩空白(含纯包裹标签)则返回空串 */
