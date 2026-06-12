@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { deriveTitle, renderHtml, moveImageBlock } from '../../lib/markdown';
+import { deriveTitle, renderHtml, moveImageBlock, insertImageRef } from '../../lib/markdown';
 import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
@@ -93,6 +93,30 @@ export function App({ initial }: { initial?: Task } = {}) {
   const moveImage = (filename: string, dir: 'up' | 'down') =>
     setTask((t) => ({ ...t, markdown: moveImageBlock(t.markdown, filename, dir) }));
 
+  // 追踪最近一次正文光标位置(普通/全屏两个编辑区共用),插图插到光标处
+  const mdCaretRef = useRef<number | null>(null);
+  const activeMdRef = useRef<HTMLTextAreaElement | null>(null);
+  const trackCaret = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    mdCaretRef.current = e.currentTarget.selectionStart;
+    activeMdRef.current = e.currentTarget;
+  };
+
+  const insertImage = (filename: string) => {
+    const { markdown: md, caret } = insertImageRef(
+      latestTask.current.markdown, filename, mdCaretRef.current ?? undefined,
+    );
+    setTask((t) => ({ ...t, markdown: md }));
+    mdCaretRef.current = caret;
+    flash(`已插入 ${filename}`);
+    requestAnimationFrame(() => {
+      const ta = activeMdRef.current;
+      if (ta && document.contains(ta)) {
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = caret;
+      }
+    });
+  };
+
   const editImageByName = (filename: string) => {
     const im = latestTask.current.images.find((i) => i.filename === filename);
     if (im) setEditingImg(im);
@@ -142,7 +166,8 @@ export function App({ initial }: { initial?: Task } = {}) {
               value={task.title} onChange={(e) => setTask((t) => ({ ...t, title: e.target.value }))} />
             <textarea style={{ ...field, height: 280, fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 13, lineHeight: 1.6, resize: 'vertical' }}
               placeholder="在此粘贴 Markdown 正文…"
-              value={task.markdown} onChange={(e) => setMarkdown(e.target.value)} />
+              value={task.markdown} onChange={(e) => { setMarkdown(e.target.value); trackCaret(e); }}
+              onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret} />
           </Card>
 
           <Card>
@@ -152,7 +177,8 @@ export function App({ initial }: { initial?: Task } = {}) {
             <ImageGallery
               task={task} matchedSet={matchedSet} missing={match.missing}
               onAddImages={(fs) => void addImages(fs)} onUpdateImage={updateImage}
-              onRemoveImage={removeImage} onSetCover={(f) => setTask((t) => ({ ...t, coverFilename: f }))} />
+              onRemoveImage={removeImage} onSetCover={(f) => setTask((t) => ({ ...t, coverFilename: f }))}
+              onInsertImage={insertImage} />
           </Card>
 
           <Card>
@@ -209,17 +235,40 @@ export function App({ initial }: { initial?: Task } = {}) {
               style={{ ...btn.gold(), marginLeft: 'auto', padding: '7px 16px', fontSize: 13 }}>退出全屏</button>
           </header>
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 0 }}>
-            <textarea
-              value={task.markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              placeholder="在此编辑 Markdown 正文…"
-              style={{
-                border: 'none', outline: 'none', resize: 'none', background: T.card,
-                borderRight: `1px solid ${T.border}`, padding: '24px 28px',
-                fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 13.5,
-                lineHeight: 1.7, color: T.text,
-              }}
-            />
+            <div style={{
+              display: 'flex', flexDirection: 'column', minHeight: 0,
+              borderRight: `1px solid ${T.border}`, background: T.card,
+            }}>
+              <textarea
+                value={task.markdown}
+                onChange={(e) => { setMarkdown(e.target.value); trackCaret(e); }}
+                onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret}
+                placeholder="在此编辑 Markdown 正文…"
+                style={{
+                  flex: 1, border: 'none', outline: 'none', resize: 'none', background: 'transparent',
+                  padding: '24px 28px',
+                  fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 13.5,
+                  lineHeight: 1.7, color: T.text,
+                }}
+              />
+              {task.images.length > 0 && (
+                <div style={{
+                  borderTop: `1px solid ${T.border}`, background: T.paper, padding: '8px 14px',
+                  display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', flexShrink: 0,
+                }}>
+                  <span style={{ fontSize: 11, color: T.textFaint, flexShrink: 0 }}>点击插入图片 ↦</span>
+                  {task.images.map((img) => (
+                    <img key={img.filename} src={img.dataUrl} alt={img.filename}
+                      title={`插入 ${img.filename} 到光标处`}
+                      onClick={() => insertImage(img.filename)}
+                      style={{
+                        width: 42, height: 42, objectFit: 'cover', borderRadius: 6, cursor: 'pointer',
+                        border: `1px solid ${T.border}`, flexShrink: 0,
+                      }} />
+                  ))}
+                </div>
+              )}
+            </div>
             <div style={{ overflow: 'auto', padding: '24px 32px' }}>
               <Preview task={task} onMoveImage={moveImage} onEditImage={editImageByName} />
             </div>

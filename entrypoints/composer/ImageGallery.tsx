@@ -5,9 +5,9 @@ import { ImageEditor } from './ImageEditor';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
-/** 配图画廊:缩略图网格,每张可编辑/设封面/删除;缺图与超限提示 */
+/** 配图画廊:缩略图网格,每张可插入正文/编辑/设封面/删除;缺图与超限提示 */
 export function ImageGallery({
-  task, matchedSet, missing, onAddImages, onUpdateImage, onRemoveImage, onSetCover,
+  task, matchedSet, missing, onAddImages, onUpdateImage, onRemoveImage, onSetCover, onInsertImage,
 }: {
   task: Task;
   matchedSet: Set<string>;
@@ -16,6 +16,7 @@ export function ImageGallery({
   onUpdateImage: (filename: string, updated: TaskImage) => void;
   onRemoveImage: (filename: string) => void;
   onSetCover: (filename: string | undefined) => void;
+  onInsertImage?: (filename: string) => void;
 }) {
   const [editing, setEditing] = useState<TaskImage | null>(null);
   const [hover, setHover] = useState<string | null>(null);
@@ -70,6 +71,12 @@ export function ImageGallery({
                       position: 'absolute', inset: 0, background: 'rgba(10,18,22,.5)',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                     }}>
+                      {onInsertImage && (
+                        <button type="button" onClick={() => onInsertImage(img.filename)}
+                          style={{ ...miniBtn, background: 'rgba(201,168,106,.9)', color: '#16242c', border: 'none' }}>
+                          插入正文
+                        </button>
+                      )}
                       <button type="button" onClick={() => setEditing(img)} style={miniBtn}>编辑</button>
                       <button type="button" onClick={() => onSetCover(isCover ? undefined : img.filename)} style={miniBtn}>
                         {isCover ? '取消封面' : '设为封面'}

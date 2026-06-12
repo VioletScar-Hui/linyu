@@ -72,6 +72,23 @@ export function moveImageBlock(markdown: string, filename: string, dir: 'up' | '
   return next.join('\n\n');
 }
 
+/** 在 markdown 的 pos 处插入本地图片引用,自动用空行隔成独立块(便于后续上下移动)。
+ *  pos 省略时插到文末。返回新 markdown 与插入后光标位置。 */
+export function insertImageRef(
+  markdown: string,
+  filename: string,
+  pos?: number,
+): { markdown: string; caret: number } {
+  const p = Math.max(0, Math.min(pos ?? markdown.length, markdown.length));
+  const before = markdown.slice(0, p);
+  const after = markdown.slice(p);
+  const snippet = `![](${filename})`;
+  const sepBefore = before === '' ? '' : before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+  const sepAfter = after === '' ? '\n' : after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
+  const head = before + sepBefore + snippet;
+  return { markdown: head + sepAfter + after, caret: head.length };
+}
+
 /** 剥去所有标签和空白后返回剩余文字;若只剩空白(含纯包裹标签)则返回空串 */
 function stripEmptyHtml(html: string): string {
   return html.replace(/<[^>]+>/g, '').trim();

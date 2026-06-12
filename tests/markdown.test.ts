@@ -1,5 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { renderHtml, deriveTitle, renderSegments, moveImageBlock } from '../lib/markdown';
+import { renderHtml, deriveTitle, renderSegments, moveImageBlock, insertImageRef } from '../lib/markdown';
+
+describe('insertImageRef', () => {
+  it('默认插到文末并自成一块', () => {
+    const r = insertImageRef('段一', 'a.png');
+    expect(r.markdown).toBe('段一\n\n![](a.png)\n');
+  });
+
+  it('段落中间插入会把段落拆为两块', () => {
+    const r = insertImageRef('段落文字', 'a.png', 2);
+    expect(r.markdown).toBe('段落\n\n![](a.png)\n\n文字');
+    expect(r.caret).toBe('段落\n\n![](a.png)'.length);
+  });
+
+  it('在块边界插入不会产生多余空行', () => {
+    const r = insertImageRef('段一\n\n段二', 'a.png', 4);
+    expect(r.markdown).toBe('段一\n\n![](a.png)\n\n段二');
+  });
+
+  it('开头插入', () => {
+    expect(insertImageRef('段一', 'a.png', 0).markdown).toBe('![](a.png)\n\n段一');
+  });
+});
 
 describe('moveImageBlock', () => {
   const md = '段一\n\n![图](./img/a.png)\n\n段二';
