@@ -25,8 +25,8 @@ const field: React.CSSProperties = {
   padding: '11px 14px', fontSize: 14, fontFamily: T.fontSans, color: T.text, background: T.card,
 };
 
-export function App() {
-  const [task, setTask] = useState<Task>(() => newTask({ title: '', markdown: '' }));
+export function App({ initial }: { initial?: Task } = {}) {
+  const [task, setTask] = useState<Task>(() => initial ?? newTask({ title: '', markdown: '' }));
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 

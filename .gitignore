@@ -1,3 +1,5 @@
 node_modules/
 .wxt/
 .output/
+
+preview/out.js
