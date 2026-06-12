@@ -1,41 +1,46 @@
 import { browser } from 'wxt/browser';
 import { PLATFORMS, type PlatformId } from '../../lib/platforms';
+import { T, btn, PLATFORM_COLORS, StatusPill } from '../../lib/ui';
 import type { Task, PlatformStatus } from '../../lib/tasks';
 
-function StatusBadge({ status }: { status?: PlatformStatus }) {
+function statusView(status?: PlatformStatus) {
   if (!status) return null;
   if (status.state === 'pending')
-    return <span>⏳ 等待填充…(需登录;若编辑器页已开着,请刷新该页触发填充)</span>;
+    return <StatusPill state="pending" text="等待填充…(需登录;编辑器已开请刷新)" />;
   if (status.state === 'filled')
-    return <span style={{ color: 'green' }}>✅ 已填充,请人工检查后发布{status.note ? `(${status.note})` : ''}</span>;
-  return <span style={{ color: 'red' }}>❌ {status.reason}</span>;
+    return <StatusPill state="filled" text={`已填充,请检查后发布${status.note ? `(${status.note})` : ''}`} />;
+  return <StatusPill state="failed" text={status.reason} />;
 }
 
 export function PlatformBar({ task, onBeforeFill }: { task: Task; onBeforeFill: () => Promise<void> }) {
   const startFill = async (platformId: PlatformId) => {
-    await onBeforeFill(); // 先落库,适配器读到的才是最新内容
+    await onBeforeFill();
     await browser.runtime.sendMessage({ kind: 'start-fill', platformId, taskId: task.id });
   };
 
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-      <tbody>
-        {PLATFORMS.map((p) => (
-          <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-            <td style={{ padding: 6, whiteSpace: 'nowrap' }}>{p.name}</td>
-            <td>
-              {p.supportsFill ? (
-                <button type="button" onClick={() => void startFill(p.id)}>
-                  {task.platformStatus[p.id]?.state === 'failed' ? '重试填充' : '去发布'}
-                </button>
-              ) : (
-                <button type="button" onClick={() => void browser.tabs.create({ url: p.publishUrl })}>跳转</button>
-              )}
-            </td>
-            <td><StatusBadge status={task.platformStatus[p.id]} /></td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {PLATFORMS.map((p, i) => {
+        const st = task.platformStatus[p.id];
+        return (
+          <div key={p.id} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '11px 4px',
+            borderTop: i === 0 ? 'none' : `1px solid ${T.borderSoft}`,
+          }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: PLATFORM_COLORS[p.id], flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: T.text, width: 96, flexShrink: 0 }}>{p.name}</span>
+            <button type="button"
+              onClick={() => void startFill(p.id)}
+              style={{
+                ...btn.ghost(), padding: '6px 14px', flexShrink: 0,
+                ...(st?.state === 'failed' ? { borderColor: `${T.err}66`, color: T.err } : {}),
+              }}>
+              {st?.state === 'failed' ? '重试填充' : '去发布'}
+            </button>
+            <span style={{ marginLeft: 'auto', minWidth: 0 }}>{statusView(st)}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }

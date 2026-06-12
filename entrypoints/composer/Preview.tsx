@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { renderHtml } from '../../lib/markdown';
+import { T } from '../../lib/ui';
 import type { Task } from '../../lib/tasks';
 
 export function Preview({ task }: { task: Task }) {
@@ -10,8 +11,12 @@ export function Preview({ task }: { task: Task }) {
 
   return (
     <div
-      style={{ border: '1px solid #ddd', padding: 16, height: 600, overflow: 'auto' }}
-      dangerouslySetInnerHTML={{ __html: html }}
+      className="lingyu-preview"
+      style={{
+        padding: '4px 4px', minHeight: 200, color: T.text, fontSize: 15, lineHeight: 1.75,
+        wordBreak: 'break-word',
+      }}
+      dangerouslySetInnerHTML={{ __html: html || '<p style="color:#93a0a6">正文预览将在此显示…</p>' }}
     />
   );
 }
