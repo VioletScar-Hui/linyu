@@ -55,6 +55,18 @@ export function App({ initial }: { initial?: Task } = {}) {
     return () => browser.storage.onChanged.removeListener(listener);
   }, [task.id]);
 
+  // 草稿自动保存:内容停止变动 1.5s 后落库(空任务不存);依赖内容字段而非 platformStatus,
+  // 避免状态刷新触发多余保存
+  const [autoSaved, setAutoSaved] = useState(false);
+  useEffect(() => {
+    const t = latestTask.current;
+    if (!t.title && !t.markdown && t.images.length === 0) return;
+    const id = setTimeout(() => {
+      void saveTask(latestTask.current).then(() => { setSavedAt(Date.now()); setAutoSaved(true); });
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [task.title, task.markdown, task.images, task.variants, task.coverFilename]);
+
   const refs = useMemo(() => extractImageRefs(task.markdown), [task.markdown]);
   const match = useMemo(
     () => matchImages(refs, task.images.map((i) => i.filename)),
@@ -122,9 +134,25 @@ export function App({ initial }: { initial?: Task } = {}) {
     if (im) setEditingImg(im);
   };
 
+  // 正文编辑区粘贴:截图等剪贴板图片直接入库并插到光标处
+  const onPasteMd = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imgItems = [...(e.clipboardData?.items ?? [])].filter((i) => i.type.startsWith('image/'));
+    if (imgItems.length === 0) return;
+    e.preventDefault();
+    trackCaret(e);
+    for (const it of imgItems) {
+      const file = it.getAsFile();
+      if (!file) continue;
+      const ext = (file.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+      const name = `pasted-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+      const renamed = new File([file], name, { type: file.type });
+      void addImages([renamed]).then(() => insertImage(name));
+    }
+  };
+
   const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2600); };
 
-  const save = async () => { await saveTask(latestTask.current); setSavedAt(Date.now()); flash('已保存'); };
+  const save = async () => { await saveTask(latestTask.current); setSavedAt(Date.now()); setAutoSaved(false); flash('已保存'); };
 
   const copyFallback = async () => {
     const t = latestTask.current;
@@ -165,9 +193,9 @@ export function App({ initial }: { initial?: Task } = {}) {
               placeholder="标题(自动取自第一个 # 标题,可改)"
               value={task.title} onChange={(e) => setTask((t) => ({ ...t, title: e.target.value }))} />
             <textarea style={{ ...field, height: 280, fontFamily: 'ui-monospace, Menlo, Consolas, monospace', fontSize: 13, lineHeight: 1.6, resize: 'vertical' }}
-              placeholder="在此粘贴 Markdown 正文…"
+              placeholder="在此粘贴 Markdown 正文…(截图可直接 Ctrl+V 插入)"
               value={task.markdown} onChange={(e) => { setMarkdown(e.target.value); trackCaret(e); }}
-              onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret} />
+              onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret} onPaste={onPasteMd} />
           </Card>
 
           <Card>
@@ -194,6 +222,11 @@ export function App({ initial }: { initial?: Task } = {}) {
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
               <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
+              {savedAt && (
+                <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: T.textFaint }}>
+                  {autoSaved ? '已自动保存' : '已保存'} {new Date(savedAt).toLocaleTimeString()}
+                </span>
+              )}
             </div>
           </Card>
         </div>
@@ -242,8 +275,8 @@ export function App({ initial }: { initial?: Task } = {}) {
               <textarea
                 value={task.markdown}
                 onChange={(e) => { setMarkdown(e.target.value); trackCaret(e); }}
-                onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret}
-                placeholder="在此编辑 Markdown 正文…"
+                onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret} onPaste={onPasteMd}
+                placeholder="在此编辑 Markdown 正文…(截图可直接 Ctrl+V 插入)"
                 style={{
                   flex: 1, border: 'none', outline: 'none', resize: 'none', background: 'transparent',
                   padding: '24px 28px',
