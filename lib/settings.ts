@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser';
+import { DEFAULT_ENABLED, type PlatformId } from './platforms';
 
 /** 公众号账号:备注名 + 会话级 token(登录后台后从地址栏 token= 复制) */
 export interface MpAccount {
@@ -17,6 +18,8 @@ export interface Snippet {
 export interface Settings {
   mpAccounts: MpAccount[];
   snippets: Snippet[];
+  /** 用户启用显示的平台;未设置时用 DEFAULT_ENABLED(有适配器的 7 个) */
+  enabledPlatforms: PlatformId[];
 }
 
 const KEY = 'settings';
@@ -24,7 +27,11 @@ const KEY = 'settings';
 export async function getSettings(): Promise<Settings> {
   const got = await browser.storage.local.get(KEY);
   const s = got[KEY] as Partial<Settings> | undefined;
-  return { mpAccounts: s?.mpAccounts ?? [], snippets: s?.snippets ?? [] };
+  return {
+    mpAccounts: s?.mpAccounts ?? [],
+    snippets: s?.snippets ?? [],
+    enabledPlatforms: s?.enabledPlatforms ?? DEFAULT_ENABLED,
+  };
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {

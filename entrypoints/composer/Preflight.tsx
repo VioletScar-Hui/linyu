@@ -4,12 +4,14 @@ import { preflight, worstLevel } from '../../lib/preflight';
 import { T, PLATFORM_COLORS } from '../../lib/ui';
 import type { Task } from '../../lib/tasks';
 
-/** 发布前体检:只列出有问题的平台(error 红 / warn 黄);全部就绪时一行绿提示 */
-export function Preflight({ task, missing }: { task: Task; missing: string[] }) {
+/** 发布前体检:只列出已启用且有适配器的平台中有问题的(error 红 / warn 黄);全部就绪时一行绿提示 */
+export function Preflight({ task, missing, enabled }: { task: Task; missing: string[]; enabled: Set<string> }) {
   const result = useMemo(() => preflight(task, missing), [task, missing]);
   const [open, setOpen] = useState(true);
 
-  const rows = PLATFORMS.map((p) => ({ p, issues: result[p.id] ?? [], level: worstLevel(result[p.id]) }))
+  const rows = PLATFORMS
+    .filter((p) => p.supportsFill && enabled.has(p.id))
+    .map((p) => ({ p, issues: result[p.id] ?? [], level: worstLevel(result[p.id]) }))
     .filter((r) => r.level !== 'ok');
 
   const errCount = rows.filter((r) => r.level === 'error').length;
@@ -19,7 +21,7 @@ export function Preflight({ task, missing }: { task: Task; missing: string[] }) 
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.ok, padding: '2px 0' }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: T.ok }} />
-        全部就绪 · 七平台均无明显问题
+        全部就绪 · 已启用平台均无明显问题
       </div>
     );
   }

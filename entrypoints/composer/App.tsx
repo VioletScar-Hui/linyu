@@ -53,6 +53,8 @@ export function App({ initial }: { initial?: Task } = {}) {
     if (t) { setTask(t); setSavedAt(null); }
   };
 
+  const enabledSet = useMemo(() => new Set(settings.enabledPlatforms), [settings.enabledPlatforms]);
+
   // Esc 退出全屏
   useEffect(() => {
     if (!fullPreview) return;
@@ -268,9 +270,9 @@ export function App({ initial }: { initial?: Task } = {}) {
           <Card>
             <SectionTitle n="4" title="分发到平台" />
             <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
-              <Preflight task={task} missing={match.missing} />
+              <Preflight task={task} missing={match.missing} enabled={enabledSet} />
             </div>
-            <PlatformBar task={task} mpAccounts={settings.mpAccounts} onBeforeFill={save} />
+            <PlatformBar task={task} mpAccounts={settings.mpAccounts} enabled={enabledSet} onBeforeFill={save} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
               <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>

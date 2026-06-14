@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { T, btn } from '../../lib/ui';
+import { PLATFORMS, type PlatformId } from '../../lib/platforms';
+import { T, btn, PLATFORM_COLORS } from '../../lib/ui';
 import {
   newMpAccount, newSnippet, saveSettings,
   type MpAccount, type Snippet, type Settings,
@@ -18,16 +19,20 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
 }) {
   const [accounts, setAccounts] = useState<MpAccount[]>(settings.mpAccounts);
   const [snippets, setSnippets] = useState<Snippet[]>(settings.snippets);
+  const [enabled, setEnabled] = useState<Set<PlatformId>>(new Set(settings.enabledPlatforms));
 
   const upAcc = (id: string, patch: Partial<MpAccount>) =>
     setAccounts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   const upSnip = (id: string, patch: Partial<Snippet>) =>
     setSnippets((l) => l.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const togglePlatform = (id: PlatformId) =>
+    setEnabled((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const save = async () => {
     const next: Settings = {
       mpAccounts: accounts.filter((a) => a.name.trim() || a.token.trim()),
       snippets: snippets.filter((s) => s.name.trim() || s.content.trim()),
+      enabledPlatforms: PLATFORMS.filter((p) => enabled.has(p.id)).map((p) => p.id),
     };
     await saveSettings(next);
     onSaved(next);
@@ -49,7 +54,28 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
         </div>
 
         <div style={{ padding: 20 }}>
-          <div style={sectionH}>公众号账号</div>
+          <div style={sectionH}>显示哪些平台</div>
+          <div style={{ fontSize: 12, color: T.textSoft, marginBottom: 12 }}>
+            勾选你常用的平台,popup 与分发区只显示它们。标「填充」的有自动填充适配器,其余仅快捷跳转。
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8, marginBottom: 8 }}>
+            {PLATFORMS.map((p) => (
+              <label key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', cursor: 'pointer',
+                border: `1px solid ${enabled.has(p.id) ? T.gold : T.border}`, borderRadius: T.radiusSm,
+                background: enabled.has(p.id) ? T.goldFaint + '66' : T.card, fontSize: 13,
+              }}>
+                <input type="checkbox" checked={enabled.has(p.id)} onChange={() => togglePlatform(p.id)} />
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: PLATFORM_COLORS[p.id], flexShrink: 0 }} />
+                <span style={{ color: T.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                <span style={{ fontSize: 10, color: p.supportsFill ? T.ok : T.textFaint, flexShrink: 0 }}>
+                  {p.supportsFill ? '填充' : '跳转'}
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <div style={{ ...sectionH, marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>公众号账号</div>
           <div style={{ fontSize: 12, color: T.textSoft, lineHeight: 1.7, background: T.goldFaint + '88', border: `1px solid ${T.gold}55`, borderRadius: T.radiusSm, padding: '10px 12px', marginBottom: 12 }}>
             登录公众号后台后,复制地址栏 <code style={{ background: '#fff', padding: '1px 5px', borderRadius: 4 }}>token=</code> 后的数字填入。
             <strong style={{ color: T.err }}> 注意</strong>:实际发到哪个号取决于<strong>浏览器当前登录的号</strong>;token 会话级,过期需重填。

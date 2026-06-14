@@ -15,13 +15,17 @@ function statusView(status?: PlatformStatus) {
   return <StatusPill state="failed" text={status.reason} />;
 }
 
-export function PlatformBar({ task, mpAccounts, onBeforeFill }: {
+export function PlatformBar({ task, mpAccounts, enabled, onBeforeFill }: {
   task: Task;
   mpAccounts: MpAccount[];
+  enabled: Set<string>;
   onBeforeFill: () => Promise<void>;
 }) {
   const [selected, setSelected] = useState<Set<PlatformId>>(new Set());
   const [pickMp, setPickMp] = useState(false); // 公众号选号行展开
+
+  const rows = PLATFORMS.filter((p) => enabled.has(p.id));
+  const fillableIds = rows.filter((p) => p.supportsFill).map((p) => p.id);
 
   const fill = async (id: PlatformId, openUrl?: string) => {
     await onBeforeFill();
@@ -52,16 +56,15 @@ export function PlatformBar({ task, mpAccounts, onBeforeFill }: {
   const toggle = (id: PlatformId) =>
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
-  const allIds = PLATFORMS.map((p) => p.id);
-  const allSelected = selected.size === allIds.length;
+  const allSelected = fillableIds.length > 0 && selected.size === fillableIds.length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 10 }}>
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.textSoft, cursor: 'pointer' }}>
           <input type="checkbox" checked={allSelected}
-            onChange={() => setSelected(allSelected ? new Set() : new Set(allIds))} />
-          全选
+            onChange={() => setSelected(allSelected ? new Set() : new Set(fillableIds))} />
+          全选可填充
         </label>
         <button type="button" disabled={selected.size === 0} onClick={() => void batchFill()}
           style={{ ...btn.gold(), padding: '6px 16px', fontSize: 13, opacity: selected.size === 0 ? 0.45 : 1, cursor: selected.size === 0 ? 'default' : 'pointer' }}>
@@ -72,22 +75,36 @@ export function PlatformBar({ task, mpAccounts, onBeforeFill }: {
         )}
       </div>
 
-      {PLATFORMS.map((p) => {
+      {rows.map((p) => {
         const st = task.platformStatus[p.id];
         const isWeixin = p.id === 'weixin';
         return (
           <div key={p.id}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 4px', borderTop: `1px solid ${T.borderSoft}` }}>
-              <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)}
-                style={{ flexShrink: 0, cursor: 'pointer' }} aria-label={`选择${p.name}`} />
+              {p.supportsFill ? (
+                <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)}
+                  style={{ flexShrink: 0, cursor: 'pointer' }} aria-label={`选择${p.name}`} />
+              ) : (
+                <span style={{ width: 13, flexShrink: 0 }} />
+              )}
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: PLATFORM_COLORS[p.id], flexShrink: 0 }} />
               <span style={{ fontSize: 13, color: T.text, width: 92, flexShrink: 0 }}>{p.name}</span>
-              <button type="button"
-                onClick={() => (isWeixin ? clickWeixin() : void fill(p.id))}
-                style={{ ...btn.ghost(), padding: '6px 14px', flexShrink: 0, ...(st?.state === 'failed' ? { borderColor: `${T.err}66`, color: T.err } : {}) }}>
-                {st?.state === 'failed' ? '重试填充' : isWeixin && mpAccounts.length > 0 ? '去发布 ▾' : '去发布'}
-              </button>
-              <span style={{ marginLeft: 'auto', minWidth: 0 }}>{statusView(st)}</span>
+              {p.supportsFill ? (
+                <button type="button"
+                  onClick={() => (isWeixin ? clickWeixin() : void fill(p.id))}
+                  style={{ ...btn.ghost(), padding: '6px 14px', flexShrink: 0, ...(st?.state === 'failed' ? { borderColor: `${T.err}66`, color: T.err } : {}) }}>
+                  {st?.state === 'failed' ? '重试填充' : isWeixin && mpAccounts.length > 0 ? '去发布 ▾' : '去发布'}
+                </button>
+              ) : (
+                <button type="button"
+                  onClick={() => void browser.tabs.create({ url: p.publishUrl })}
+                  style={{ ...btn.ghost(), padding: '6px 14px', flexShrink: 0, color: T.textSoft }}>
+                  跳转
+                </button>
+              )}
+              <span style={{ marginLeft: 'auto', minWidth: 0 }}>
+                {p.supportsFill ? statusView(st) : <span style={{ fontSize: 11, color: T.textFaint }}>仅跳转</span>}
+              </span>
             </div>
             {isWeixin && pickMp && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '4px 4px 12px 36px' }}>

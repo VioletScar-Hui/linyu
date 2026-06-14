@@ -1,20 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fakeBrowser } from 'wxt/testing';
 import { getSettings, saveSettings, newMpAccount, newSnippet } from '../lib/settings';
+import { DEFAULT_ENABLED } from '../lib/platforms';
 
 beforeEach(() => fakeBrowser.reset());
 
 describe('settings 存储', () => {
-  it('默认空账号与空片段列表', async () => {
-    expect(await getSettings()).toEqual({ mpAccounts: [], snippets: [] });
+  it('默认空账号/片段,启用平台为默认 7 个', async () => {
+    expect(await getSettings()).toEqual({ mpAccounts: [], snippets: [], enabledPlatforms: DEFAULT_ENABLED });
   });
 
-  it('保存后可取回账号与片段', async () => {
+  it('保存后可取回账号、片段与启用平台', async () => {
     const acc = { ...newMpAccount('主号'), token: '123456' };
-    await saveSettings({ mpAccounts: [acc], snippets: [{ id: 's1', name: '签名', content: '关注我' }] });
+    await saveSettings({ mpAccounts: [acc], snippets: [{ id: 's1', name: '签名', content: '关注我' }], enabledPlatforms: ['zhihu', 'medium'] });
     const s = await getSettings();
     expect(s.mpAccounts[0]).toMatchObject({ name: '主号', token: '123456' });
     expect(s.snippets[0]).toMatchObject({ name: '签名', content: '关注我' });
+    expect(s.enabledPlatforms).toEqual(['zhihu', 'medium']);
   });
 
   it('newMpAccount 生成唯一 id 且 token 初始为空', () => {

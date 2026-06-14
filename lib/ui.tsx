@@ -39,6 +39,13 @@ export const PLATFORM_COLORS: Record<PlatformId, string> = {
   bilibili: '#fb7299',
   x: '#14171a',
   reddit: '#ff4500',
+  weibo: '#e6162d',
+  jianshu: '#ea6f5a',
+  juejin: '#1e80ff',
+  csdn: '#fc5531',
+  toutiao: '#f04142',
+  douban: '#2c963f',
+  medium: '#000000',
 };
 
 /** 灵羽羽毛标识(Feather 风格,单色 currentColor) */

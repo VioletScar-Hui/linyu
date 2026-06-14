@@ -1,9 +1,14 @@
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PLATFORMS } from '../../lib/platforms';
+import { getSettings } from '../../lib/settings';
 import { T, PLATFORM_COLORS, BrandHeader } from '../../lib/ui';
 
 function Popup() {
   const open = (url: string) => browser.tabs.create({ url });
+  const [enabled, setEnabled] = useState<Set<string>>(new Set());
+  useEffect(() => { void getSettings().then((s) => setEnabled(new Set(s.enabledPlatforms))); }, []);
+  const platforms = PLATFORMS.filter((p) => enabled.has(p.id));
   return (
     <div style={{ width: 340, background: T.paper, fontFamily: T.fontSans, color: T.text }}>
       <div style={{ background: T.ink, padding: '16px 18px' }}>
@@ -29,7 +34,7 @@ function Popup() {
           快捷前往平台
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {PLATFORMS.map((p) => (
+          {platforms.map((p) => (
             <button
               key={p.id}
               onClick={() => open(p.publishUrl)}
