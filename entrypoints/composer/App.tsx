@@ -13,6 +13,7 @@ import { History } from './History';
 import { ImageGallery } from './ImageGallery';
 import { ImageEditor } from './ImageEditor';
 import { SettingsPanel } from './SettingsPanel';
+import { Preflight } from './Preflight';
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -231,6 +232,9 @@ export function App({ initial }: { initial?: Task } = {}) {
 
           <Card>
             <SectionTitle n="4" title="分发到平台" />
+            <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
+              <Preflight task={task} missing={match.missing} />
+            </div>
             <PlatformBar task={task} mpAccounts={mpAccounts} onBeforeFill={save} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
