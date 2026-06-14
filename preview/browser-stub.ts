@@ -4,10 +4,16 @@ const mkTask = (i: number, title: string, status = {}) => ({
   images: [], variants: {}, platformStatus: status,
 });
 const store: Record<string, unknown> = {
-  settings: { mpAccounts: [
-    { id: '1', name: '主号·科技', token: '111222' },
-    { id: '2', name: '小号·随笔', token: '' },
-  ] },
+  settings: {
+    mpAccounts: [
+      { id: '1', name: '主号·科技', token: '111222' },
+      { id: '2', name: '小号·随笔', token: '' },
+    ],
+    snippets: [
+      { id: 's1', name: '关注签名', content: '\n\n---\n\n喜欢请关注「灵羽」,每周一篇深度好文。' },
+      { id: 's2', name: '开头钩子', content: '> 一个被低估的事实:' },
+    ],
+  },
   tasks: [
     mkTask(1, 'AI 编程工具横评', { zhihu: { state: 'filled' }, weixin: { state: 'filled' } }),
     mkTask(2, '小红书运营心得', { xiaohongshu: { state: 'pending' } }),

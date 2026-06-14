@@ -4,7 +4,7 @@ import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
 import { newTask, saveTask, getTask, type Task, type TaskImage } from '../../lib/tasks';
-import { getSettings, type MpAccount } from '../../lib/settings';
+import { getSettings, type Settings } from '../../lib/settings';
 import { T, btn, BrandHeader, Card, SectionTitle, LingyuMark } from '../../lib/ui';
 import { Preview } from './Preview';
 import { VariantTabs } from './VariantTabs';
@@ -36,9 +36,9 @@ export function App({ initial }: { initial?: Task } = {}) {
   const [fullPreview, setFullPreview] = useState(false);
   const [editingImg, setEditingImg] = useState<TaskImage | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [mpAccounts, setMpAccounts] = useState<MpAccount[]>([]);
+  const [settings, setSettings] = useState<Settings>({ mpAccounts: [], snippets: [] });
 
-  useEffect(() => { void getSettings().then((s) => setMpAccounts(s.mpAccounts)); }, []);
+  useEffect(() => { void getSettings().then(setSettings); }, []);
 
   // Esc 退出全屏
   useEffect(() => {
@@ -141,6 +141,19 @@ export function App({ initial }: { initial?: Task } = {}) {
     if (im) setEditingImg(im);
   };
 
+  // 在正文光标处插入任意文本(常用片段);未聚焦过编辑区则追加到文末
+  const insertSnippet = (content: string) => {
+    const md = latestTask.current.markdown;
+    const pos = mdCaretRef.current ?? md.length;
+    const caret = pos + content.length;
+    setTask((t) => ({ ...t, markdown: md.slice(0, pos) + content + md.slice(pos) }));
+    mdCaretRef.current = caret;
+    requestAnimationFrame(() => {
+      const ta = activeMdRef.current;
+      if (ta && document.contains(ta)) { ta.focus(); ta.selectionStart = ta.selectionEnd = caret; }
+    });
+  };
+
   // 正文编辑区粘贴:截图等剪贴板图片直接入库并插到光标处
   const onPasteMd = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const imgItems = [...(e.clipboardData?.items ?? [])].filter((i) => i.type.startsWith('image/'));
@@ -210,6 +223,15 @@ export function App({ initial }: { initial?: Task } = {}) {
               placeholder="在此粘贴 Markdown 正文…(截图可直接 Ctrl+V 插入)"
               value={task.markdown} onChange={(e) => { setMarkdown(e.target.value); trackCaret(e); }}
               onSelect={trackCaret} onClick={trackCaret} onKeyUp={trackCaret} onPaste={onPasteMd} />
+            {settings.snippets.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>插入片段:</span>
+                {settings.snippets.map((s) => (
+                  <button key={s.id} type="button" onClick={() => insertSnippet(s.content)}
+                    style={{ ...btn.ghost(), padding: '4px 12px', fontSize: 12 }}>{s.name || '(未命名)'}</button>
+                ))}
+              </div>
+            )}
           </Card>
 
           <Card>
@@ -235,7 +257,7 @@ export function App({ initial }: { initial?: Task } = {}) {
             <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
               <Preflight task={task} missing={match.missing} />
             </div>
-            <PlatformBar task={task} mpAccounts={mpAccounts} onBeforeFill={save} />
+            <PlatformBar task={task} mpAccounts={settings.mpAccounts} onBeforeFill={save} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
               <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
@@ -332,8 +354,8 @@ export function App({ initial }: { initial?: Task } = {}) {
       )}
 
       {showSettings && (
-        <SettingsPanel accounts={mpAccounts}
-          onSaved={(a) => { setMpAccounts(a); flash('设置已保存'); }}
+        <SettingsPanel settings={settings}
+          onSaved={(s) => { setSettings(s); flash('设置已保存'); }}
           onClose={() => setShowSettings(false)} />
       )}
 
