@@ -5,6 +5,7 @@ import {
   newMpAccount, newSnippet, saveSettings,
   type MpAccount, type Snippet, type Settings,
 } from '../../lib/settings';
+import { exportBackup, importBackup } from '../../lib/backup';
 
 const field: React.CSSProperties = {
   border: `1px solid ${T.border}`, borderRadius: T.radiusSm, padding: '8px 11px',
@@ -27,6 +28,31 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
     setSnippets((l) => l.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   const togglePlatform = (id: PlatformId) =>
     setEnabled((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  const doExport = async () => {
+    const data = await exportBackup();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lingyu-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const doImport = (file: File) => {
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        const { tasks } = await importBackup(JSON.parse(r.result as string));
+        alert(`已导入 ${tasks} 篇文章及设置,即将刷新。`);
+        location.reload();
+      } catch (e) {
+        alert('导入失败:' + (e instanceof Error ? e.message : String(e)));
+      }
+    };
+    r.readAsText(file);
+  };
 
   const save = async () => {
     const next: Settings = {
@@ -113,6 +139,19 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
           </div>
           <button type="button" onClick={() => setSnippets((l) => [...l, newSnippet()])}
             style={{ ...btn.ghost(), marginTop: 10 }}>＋ 添加片段</button>
+
+          <div style={{ ...sectionH, marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>数据备份</div>
+          <div style={{ fontSize: 12, color: T.textSoft, marginBottom: 12 }}>
+            导出全部文章(含图片)与设置为一个 JSON 文件,换设备或防清除时导入恢复。
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" style={btn.ghost()} onClick={() => void doExport()}>导出备份</button>
+            <label style={{ ...btn.ghost(), display: 'inline-block' }}>
+              导入备份
+              <input type="file" accept="application/json,.json" style={{ display: 'none' }}
+                onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) doImport(f); }} />
+            </label>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
             <button type="button" style={btn.ghost()} onClick={onClose}>取消</button>
