@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fakeBrowser } from 'wxt/testing';
-import { saveTask, getTask, listTaskMetas, updatePlatformStatus, newTask, deleteTask, duplicateTask, migrateIfNeeded, type Task } from '../lib/tasks';
+import { saveTask, getTask, listTaskMetas, updatePlatformStatus, newTask, deleteTask, duplicateTask, migrateIfNeeded } from '../lib/tasks';
 
 beforeEach(() => fakeBrowser.reset());
 

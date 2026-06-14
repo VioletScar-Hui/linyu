@@ -12,6 +12,7 @@ export function stripMarkdown(markdown: string): string {
     .replace(/`([^`\n]+)`/g, (_m, code: string) =>
       code.replace(/\*/g, '\x01').replace(/_/g, '\x02')) // 行内码:去反引号,*/_ 暂存为哨兵
     .replace(/(\*\*|__|\*|_)/g, '')           // 强调标记
+    // eslint-disable-next-line no-control-regex -- 哨兵为有意使用的控制字符
     .replace(/\x01/g, '*').replace(/\x02/g, '_') // 还原行内码中的 */_
     .replace(/\n{3,}/g, '\n\n')
     .trim();

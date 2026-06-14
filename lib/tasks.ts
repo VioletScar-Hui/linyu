@@ -104,7 +104,7 @@ export async function saveTask(task: Task): Promise<void> {
     : task;
   await browser.storage.local.set({ [taskKey(task.id)]: merged });
 
-  let index = (await readIndex()).filter((m) => m.id !== task.id);
+  const index = (await readIndex()).filter((m) => m.id !== task.id);
   index.push(toMeta(merged));
   index.sort((a, b) => b.createdAt - a.createdAt);
   const keep = index.slice(0, MAX_TASKS);

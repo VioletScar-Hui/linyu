@@ -7,7 +7,10 @@
     "dev": "wxt",
     "build": "wxt build",
     "postinstall": "wxt prepare",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "lint": "eslint .",
+    "preview:build": "esbuild preview/main.tsx --bundle --outfile=preview/out.js --jsx=automatic --alias:wxt/browser=./preview/browser-stub.ts",
+    "preview": "npm run preview:build && node preview/server.mjs"
   },
   "keywords": [],
   "author": "",
@@ -22,12 +25,17 @@
     "wxt": "^0.20.26"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/markdown-it": "^14.1.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
     "happy-dom": "^20.10.2",
     "sharp": "^0.35.1",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.8"
   }
 }

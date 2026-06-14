@@ -54,7 +54,7 @@ export function PlatformBar({ task, mpAccounts, enabled, onBeforeFill }: {
   };
 
   const toggle = (id: PlatformId) =>
-    setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const allSelected = fillableIds.length > 0 && selected.size === fillableIds.length;
 

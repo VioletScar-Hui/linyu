@@ -53,3 +53,8 @@
 7 个有自动填充适配器:微信公众号 / 知乎 / 人人都是产品经理 / 小红书 / B站专栏 / X / Reddit。另含快捷跳转(暂无适配器):微博头条文章 / 简书 / 掘金 / CSDN / 今日头条 / 豆瓣 / Medium。在「设置 → 显示哪些平台」勾选启用,popup 与分发区只显示已启用的。
 
 平台改版导致填充失败时,在目标平台编辑器页打开 popup → 点「🩺 自检当前页适配器」,逐个选择器显示命中(✓)/失效(✗),据此修对应 `lib/adapters/<平台>.ts` 的 SELECTORS。
+
+## 开发
+
+- `npm run dev` 热重载;`npm test` 单测;`npm run lint` 检查;`npm run build` 构建;`npm run preview` 撰写台可视化预览(localhost:5199);`npm run icons` 重生成图标
+- CI:推送/PR 自动跑 lint + test + build(.github/workflows/ci.yml)

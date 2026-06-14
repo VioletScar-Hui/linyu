@@ -27,7 +27,7 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
   const upSnip = (id: string, patch: Partial<Snippet>) =>
     setSnippets((l) => l.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   const togglePlatform = (id: PlatformId) =>
-    setEnabled((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setEnabled((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const doExport = async () => {
     const data = await exportBackup();
