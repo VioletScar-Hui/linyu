@@ -24,7 +24,20 @@ export interface Task {
   platformStatus: Partial<Record<PlatformId, PlatformStatus>>;
 }
 
-const KEY = 'tasks';
+/** 历史列表用的轻量元信息(不含图片/正文,避免列表读入全部图片) */
+export interface TaskMeta {
+  id: string;
+  createdAt: number;
+  title: string;
+  platformStatus: Partial<Record<PlatformId, PlatformStatus>>;
+}
+
+// 存储布局:每任务一个 key `task:{id}`(完整),外加一个轻量索引 `taskIndex`(元信息列表)。
+// 旧版把所有任务(含 base64 图片)塞进单个 `tasks` 数组,列表/保存都要序列化全部图片;
+// 拆分后历史列表只读索引,单任务读写互不牵连。
+const INDEX_KEY = 'taskIndex';
+const LEGACY_KEY = 'tasks';
+const taskKey = (id: string) => `task:${id}`;
 const MAX_TASKS = 20;
 
 export function newTask(init: { title: string; markdown: string }): Task {
@@ -39,39 +52,6 @@ export function newTask(init: { title: string; markdown: string }): Task {
   };
 }
 
-async function readAll(): Promise<Task[]> {
-  const got = await browser.storage.local.get(KEY);
-  return (got[KEY] as Task[] | undefined) ?? [];
-}
-
-async function writeAll(tasks: Task[]): Promise<void> {
-  const sorted = [...tasks].sort((a, b) => b.createdAt - a.createdAt).slice(0, MAX_TASKS);
-  await browser.storage.local.set({ [KEY]: sorted });
-}
-
-export async function saveTask(task: Task): Promise<void> {
-  const all = await readAll();
-  const idx = all.findIndex((t) => t.id === task.id);
-  if (idx >= 0) {
-    // 合并存储中的平台状态(存储侧优先):撰写页用旧内存状态保存时,不冲掉后台写入的状态
-    all[idx] = {
-      ...task,
-      platformStatus: { ...task.platformStatus, ...all[idx].platformStatus },
-    };
-  } else {
-    all.push(task);
-  }
-  await writeAll(all);
-}
-
-export async function getTask(id: string): Promise<Task | undefined> {
-  return (await readAll()).find((t) => t.id === id);
-}
-
-export async function deleteTask(id: string): Promise<void> {
-  await writeAll((await readAll()).filter((t) => t.id !== id));
-}
-
 /** 基于已有任务复制为新任务:新 id/时间,清空分发状态,标题加"副本"后缀。 */
 export function duplicateTask(src: Task): Task {
   return {
@@ -82,8 +62,64 @@ export function duplicateTask(src: Task): Task {
   };
 }
 
-export async function listTasks(): Promise<Task[]> {
-  return (await readAll()).sort((a, b) => b.createdAt - a.createdAt);
+function toMeta(t: Task): TaskMeta {
+  return { id: t.id, createdAt: t.createdAt, title: t.title, platformStatus: t.platformStatus };
+}
+
+async function readIndex(): Promise<TaskMeta[]> {
+  const got = await browser.storage.local.get(INDEX_KEY);
+  const idx = (got[INDEX_KEY] as TaskMeta[] | undefined) ?? [];
+  return [...idx].sort((a, b) => b.createdAt - a.createdAt);
+}
+
+async function writeIndex(metas: TaskMeta[]): Promise<void> {
+  await browser.storage.local.set({ [INDEX_KEY]: metas });
+}
+
+/** 旧 `tasks` 单 key 数据迁移到新布局(幂等:迁移后删除旧 key)。撰写台启动时调用一次。 */
+export async function migrateIfNeeded(): Promise<void> {
+  const got = await browser.storage.local.get(LEGACY_KEY);
+  const old = got[LEGACY_KEY] as Task[] | undefined;
+  if (!old) return;
+  const metas: TaskMeta[] = [];
+  for (const t of old) {
+    await browser.storage.local.set({ [taskKey(t.id)]: t });
+    metas.push(toMeta(t));
+  }
+  metas.sort((a, b) => b.createdAt - a.createdAt);
+  await writeIndex(metas.slice(0, MAX_TASKS));
+  await browser.storage.local.remove(LEGACY_KEY);
+}
+
+export async function getTask(id: string): Promise<Task | undefined> {
+  const got = await browser.storage.local.get(taskKey(id));
+  return got[taskKey(id)] as Task | undefined;
+}
+
+export async function saveTask(task: Task): Promise<void> {
+  // 合并存储中已有的平台状态(存储侧优先):撰写页用旧内存状态保存时,不冲掉后台写入的状态
+  const existing = await getTask(task.id);
+  const merged: Task = existing
+    ? { ...task, platformStatus: { ...task.platformStatus, ...existing.platformStatus } }
+    : task;
+  await browser.storage.local.set({ [taskKey(task.id)]: merged });
+
+  let index = (await readIndex()).filter((m) => m.id !== task.id);
+  index.push(toMeta(merged));
+  index.sort((a, b) => b.createdAt - a.createdAt);
+  const keep = index.slice(0, MAX_TASKS);
+  for (const m of index.slice(MAX_TASKS)) await browser.storage.local.remove(taskKey(m.id));
+  await writeIndex(keep);
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  await browser.storage.local.remove(taskKey(id));
+  await writeIndex((await readIndex()).filter((m) => m.id !== id));
+}
+
+/** 历史列表:返回轻量元信息(降序),不含图片/正文。 */
+export async function listTaskMetas(): Promise<TaskMeta[]> {
+  return readIndex();
 }
 
 export async function updatePlatformStatus(
@@ -91,10 +127,12 @@ export async function updatePlatformStatus(
   platform: PlatformId,
   status: PlatformStatus,
 ): Promise<void> {
-  // 单次读-改-写,不经过 saveTask 的合并(状态更新是权威写入,必须能推进 pending→filled)
-  const all = await readAll();
-  const task = all.find((t) => t.id === id);
+  // 状态更新是权威直写,必须能推进 pending→filled;同步到任务与索引两处
+  const task = await getTask(id);
   if (!task) return;
   task.platformStatus[platform] = status;
-  await writeAll(all);
+  await browser.storage.local.set({ [taskKey(id)]: task });
+  const index = await readIndex();
+  const m = index.find((x) => x.id === id);
+  if (m) { m.platformStatus[platform] = status; await writeIndex(index); }
 }

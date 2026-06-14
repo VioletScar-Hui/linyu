@@ -3,7 +3,7 @@ import { deriveTitle, renderHtml, moveImageBlock, insertImageRef } from '../../l
 import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
-import { newTask, saveTask, getTask, type Task, type TaskImage } from '../../lib/tasks';
+import { newTask, saveTask, getTask, migrateIfNeeded, type Task, type TaskImage } from '../../lib/tasks';
 import { getSettings, type Settings } from '../../lib/settings';
 import { T, btn, BrandHeader, Card, SectionTitle, LingyuMark } from '../../lib/ui';
 import { Preview } from './Preview';
@@ -37,8 +37,21 @@ export function App({ initial }: { initial?: Task } = {}) {
   const [editingImg, setEditingImg] = useState<TaskImage | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<Settings>({ mpAccounts: [], snippets: [] });
+  const [ready, setReady] = useState(false);
 
-  useEffect(() => { void getSettings().then(setSettings); }, []);
+  // 启动:先迁移旧存储布局,再加载设置;迁移完成前不渲染历史(避免读到空索引)
+  useEffect(() => {
+    void (async () => {
+      await migrateIfNeeded();
+      setSettings(await getSettings());
+      setReady(true);
+    })();
+  }, []);
+
+  const loadById = async (id: string) => {
+    const t = await getTask(id);
+    if (t) { setTask(t); setSavedAt(null); }
+  };
 
   // Esc 退出全屏
   useEffect(() => {
@@ -205,7 +218,7 @@ export function App({ initial }: { initial?: Task } = {}) {
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Card style={{ padding: '14px 18px' }}>
-            <History currentId={task.id} refreshKey={savedAt} onLoad={(t) => { setTask(t); setSavedAt(null); }} />
+            {ready && <History currentId={task.id} refreshKey={savedAt} onLoadId={(id) => void loadById(id)} />}
           </Card>
 
           <Card>

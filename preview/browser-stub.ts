@@ -27,6 +27,7 @@ export const browser = {
     local: {
       get: async (k: string) => ({ [k]: store[k] }),
       set: async (o: Record<string, unknown>) => { Object.assign(store, o); },
+      remove: async (k: string) => { delete store[k]; },
     },
     onChanged: { addListener() {}, removeListener() {} },
   },
