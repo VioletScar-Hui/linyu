@@ -6,6 +6,7 @@ import { stripMarkdown } from '../xhs';
 import {
   waitFor, pasteHtml, pasteText, pasteFiles, setNativeValue, setInputFiles, dataUrlToFile, sleep,
 } from './fill-utils';
+import { buildWeixinEditorUrl } from '../weixin-url';
 import type { Msg, PeekTaskResponse } from '../messaging';
 
 // —— 选择器常量(2026-06 按真实编辑页实测) ——
@@ -32,10 +33,7 @@ export async function maybeRedirectToEditor(): Promise<void> {
   } satisfies Msg)) as PeekTaskResponse | undefined;
   if (!resp?.hasPending) return;
   sessionStorage.setItem('__mpp_redirected', '1');
-  location.assign(
-    'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1' +
-      `&type=77&createType=0&token=${token}&lang=zh_CN&timestamp=${Date.now()}`,
-  );
+  location.assign(buildWeixinEditorUrl(token));
 }
 
 export const weixinAdapter: Adapter = {

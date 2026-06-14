@@ -4,6 +4,7 @@ import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
 import { newTask, saveTask, getTask, type Task, type TaskImage } from '../../lib/tasks';
+import { getSettings, type MpAccount } from '../../lib/settings';
 import { T, btn, BrandHeader, Card, SectionTitle, LingyuMark } from '../../lib/ui';
 import { Preview } from './Preview';
 import { VariantTabs } from './VariantTabs';
@@ -11,6 +12,7 @@ import { PlatformBar } from './PlatformBar';
 import { History } from './History';
 import { ImageGallery } from './ImageGallery';
 import { ImageEditor } from './ImageEditor';
+import { SettingsPanel } from './SettingsPanel';
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -32,6 +34,10 @@ export function App({ initial }: { initial?: Task } = {}) {
   const [toast, setToast] = useState<string | null>(null);
   const [fullPreview, setFullPreview] = useState(false);
   const [editingImg, setEditingImg] = useState<TaskImage | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [mpAccounts, setMpAccounts] = useState<MpAccount[]>([]);
+
+  useEffect(() => { void getSettings().then((s) => setMpAccounts(s.mpAccounts)); }, []);
 
   // Esc 退出全屏
   useEffect(() => {
@@ -168,8 +174,15 @@ export function App({ initial }: { initial?: Task } = {}) {
         justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10,
       }}>
         <BrandHeader subtitle="一处撰写 · 羽传多平台" />
-        <button type="button" onClick={() => { setTask(newTask({ title: '', markdown: '' })); setSavedAt(null); }}
-          style={{ ...btn.gold(), padding: '9px 18px' }}>＋ 新文章</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button type="button" onClick={() => setShowSettings(true)} aria-label="设置"
+            style={{
+              background: 'transparent', color: 'rgba(255,255,255,.75)', border: '1px solid rgba(255,255,255,.25)',
+              borderRadius: T.radiusBtn, padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontFamily: T.fontSans,
+            }}>⚙ 设置</button>
+          <button type="button" onClick={() => { setTask(newTask({ title: '', markdown: '' })); setSavedAt(null); }}
+            style={{ ...btn.gold(), padding: '9px 18px' }}>＋ 新文章</button>
+        </div>
       </header>
 
       <div style={{
@@ -218,7 +231,7 @@ export function App({ initial }: { initial?: Task } = {}) {
 
           <Card>
             <SectionTitle n="4" title="分发到平台" />
-            <PlatformBar task={task} onBeforeFill={save} />
+            <PlatformBar task={task} mpAccounts={mpAccounts} onBeforeFill={save} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
               <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
@@ -312,6 +325,12 @@ export function App({ initial }: { initial?: Task } = {}) {
       {editingImg && (
         <ImageEditor image={editingImg} onClose={() => setEditingImg(null)}
           onApply={(updated) => { updateImage(editingImg.filename, updated); setEditingImg(null); flash('图片已更新'); }} />
+      )}
+
+      {showSettings && (
+        <SettingsPanel accounts={mpAccounts}
+          onSaved={(a) => { setMpAccounts(a); flash('设置已保存'); }}
+          onClose={() => setShowSettings(false)} />
       )}
 
       {toast && (

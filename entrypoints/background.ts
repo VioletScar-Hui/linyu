@@ -14,7 +14,8 @@ export default defineBackground(() => {
         await setPending(msg.platformId, msg.taskId);
         await updatePlatformStatus(msg.taskId, msg.platformId, { state: 'pending' });
         const platform = getPlatform(msg.platformId);
-        if (platform) await browser.tabs.create({ url: platform.publishUrl });
+        const url = msg.openUrl ?? platform?.publishUrl;
+        if (url) await browser.tabs.create({ url });
         sendResponse({});
       } else if (msg.kind === 'claim-task') {
         const taskId = await claimPending(msg.platformId);

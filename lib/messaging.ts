@@ -8,6 +8,8 @@ export interface StartFillMsg {
   kind: 'start-fill';
   platformId: PlatformId;
   taskId: string;
+  /** 可选:覆盖默认打开的 URL(如公众号指定账号 token 的编辑器地址,直达编辑器跳过首页) */
+  openUrl?: string;
 }
 
 /** content script → background:认领本平台待填充任务 */
