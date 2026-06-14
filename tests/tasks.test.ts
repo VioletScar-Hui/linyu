@@ -1,8 +1,30 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fakeBrowser } from 'wxt/testing';
-import { saveTask, getTask, listTasks, updatePlatformStatus, newTask } from '../lib/tasks';
+import { saveTask, getTask, listTasks, updatePlatformStatus, newTask, deleteTask, duplicateTask } from '../lib/tasks';
 
 beforeEach(() => fakeBrowser.reset());
+
+describe('deleteTask / duplicateTask', () => {
+  it('删除后列表不含该任务', async () => {
+    const t = newTask({ title: 'a', markdown: '正文' });
+    await saveTask(t);
+    await deleteTask(t.id);
+    expect(await getTask(t.id)).toBeUndefined();
+  });
+
+  it('复制为新任务:新 id、标题加副本、清空状态、深拷贝变体', () => {
+    const src = { ...newTask({ title: '原标题', markdown: '正文' }),
+      variants: { x: { title: '', body: '推文' } },
+      platformStatus: { zhihu: { state: 'filled' as const } } };
+    const dup = duplicateTask(src);
+    expect(dup.id).not.toBe(src.id);
+    expect(dup.title).toBe('原标题 副本');
+    expect(dup.platformStatus).toEqual({});
+    expect(dup.variants.x?.body).toBe('推文');
+    dup.variants.x!.body = '改了';
+    expect(src.variants.x?.body).toBe('推文'); // 深拷贝,不互相影响
+  });
+});
 
 describe('tasks 存储', () => {
   it('保存后可按 id 取回', async () => {

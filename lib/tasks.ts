@@ -68,6 +68,20 @@ export async function getTask(id: string): Promise<Task | undefined> {
   return (await readAll()).find((t) => t.id === id);
 }
 
+export async function deleteTask(id: string): Promise<void> {
+  await writeAll((await readAll()).filter((t) => t.id !== id));
+}
+
+/** 基于已有任务复制为新任务:新 id/时间,清空分发状态,标题加"副本"后缀。 */
+export function duplicateTask(src: Task): Task {
+  return {
+    ...newTask({ title: src.title ? `${src.title} 副本` : '', markdown: src.markdown }),
+    images: src.images.map((i) => ({ ...i })),
+    coverFilename: src.coverFilename,
+    variants: structuredClone(src.variants),
+  };
+}
+
 export async function listTasks(): Promise<Task[]> {
   return (await readAll()).sort((a, b) => b.createdAt - a.createdAt);
 }
