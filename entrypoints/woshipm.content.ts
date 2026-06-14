@@ -1,4 +1,4 @@
-import { runAdapter } from '../lib/adapters/runner';
+import { registerAdapter } from '../lib/adapters/runner';
 import { woshipmAdapter } from '../lib/adapters/woshipm';
 
 // 注:content script 仅在文档加载时执行一次。工作流(撰写页→"去发布"→新标签)
@@ -6,6 +6,6 @@ import { woshipmAdapter } from '../lib/adapters/woshipm';
 export default defineContentScript({
   matches: ['*://*.woshipm.com/*'],
   async main() {
-    await runAdapter(woshipmAdapter);
+    registerAdapter(woshipmAdapter);
   },
 });

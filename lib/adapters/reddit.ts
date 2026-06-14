@@ -15,6 +15,11 @@ export const redditAdapter: Adapter = {
 
   checkLogin: async () => true,
 
+  probe: () => [
+    { name: '标题框', ok: !!document.querySelector(SELECTORS.title) },
+    { name: '正文框', ok: !!document.querySelector(SELECTORS.body) },
+  ],
+
   async fill(task: Task): Promise<FillResult> {
     const v = task.variants.reddit;
     if (!v?.title) return { ok: false, failedStep: '前置检查', reason: '请先在撰写页填写 Reddit 变体' };

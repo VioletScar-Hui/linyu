@@ -22,6 +22,12 @@ export const xiaohongshuAdapter: Adapter = {
 
   checkLogin: async () => true, // 未登录会被重定向到登录页(isEditorPage 为 false)
 
+  probe: () => [
+    { name: '图文上传入口', ok: !!document.querySelector(SELECTORS.fileInput) },
+    { name: '标题框', ok: !!document.querySelector(SELECTORS.title) },
+    { name: '正文编辑器', ok: !!document.querySelector(SELECTORS.editor) },
+  ],
+
   async fill(task: Task): Promise<FillResult> {
     const v = task.variants.xiaohongshu;
     if (!v?.title || !v.body)

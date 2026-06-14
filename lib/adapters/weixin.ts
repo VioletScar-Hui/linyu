@@ -45,6 +45,13 @@ export const weixinAdapter: Adapter = {
 
   checkLogin: async () => true, // 进得了图文编辑页即已登录
 
+  probe: () => [
+    { name: '标题编辑器', ok: !!document.querySelector(SELECTORS.titleEditor) },
+    { name: '摘要框', ok: !!document.querySelector(SELECTORS.digest) },
+    { name: '正文编辑器', ok: !!document.querySelector(SELECTORS.editor) },
+    { name: '封面上传(常缺,降级正常)', ok: !!document.querySelector(SELECTORS.coverFileInput) },
+  ],
+
   async fill(task: Task): Promise<FillResult> {
     // 1. 标题:优先写可见的 ProseMirror 标题编辑器,回退遗留 #title 字段
     try {

@@ -19,6 +19,11 @@ export const zhihuAdapter: Adapter = {
   // 未登录访问 /write 会被重定向到 signin(届时 isEditorPage 为 false,任务保持等待)
   checkLogin: async () => true,
 
+  probe: () => [
+    { name: '标题框', ok: !!document.querySelector(SELECTORS.title) },
+    { name: '正文编辑器', ok: !!document.querySelector(SELECTORS.editor) },
+  ],
+
   async fill(task: Task): Promise<FillResult> {
     let title: HTMLTextAreaElement;
     try {

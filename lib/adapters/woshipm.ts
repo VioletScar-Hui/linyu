@@ -31,6 +31,16 @@ export const woshipmAdapter: Adapter = {
 
   checkLogin: async () => true, // 进得了创作后台即已登录;若实测发现未登录也可达,在此补真实检测
 
+  probe: () => {
+    const direct = document.querySelector(SELECTORS.editor);
+    const iframe = document.querySelector<HTMLIFrameElement>(SELECTORS.editorIframe);
+    const body = iframe?.contentDocument?.body ?? null;
+    return [
+      { name: '标题框', ok: !!document.querySelector(SELECTORS.title) },
+      { name: '正文编辑器', ok: !!direct || !!body },
+    ];
+  },
+
   async fill(task: Task): Promise<FillResult> {
     try {
       const title = await waitFor(() =>

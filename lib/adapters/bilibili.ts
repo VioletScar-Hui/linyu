@@ -34,6 +34,18 @@ export const bilibiliAdapter: Adapter = {
 
   checkLogin: async () => true,
 
+  probe: () => {
+    const iframe = [...document.querySelectorAll('iframe')].find(
+      (f) => (f.src || '').includes(IFRAME_SRC_HINT),
+    ) as HTMLIFrameElement | undefined;
+    const doc = iframe?.contentDocument ?? null;
+    return [
+      { name: '专栏编辑器 iframe', ok: !!doc },
+      { name: '标题框', ok: !!doc?.querySelector(SELECTORS.title) },
+      { name: '正文编辑器', ok: !!doc?.querySelector(SELECTORS.editor) },
+    ];
+  },
+
   async fill(task: Task): Promise<FillResult> {
     let doc: Document;
     try {

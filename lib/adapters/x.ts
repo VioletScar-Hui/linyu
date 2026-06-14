@@ -15,6 +15,11 @@ export const xAdapter: Adapter = {
 
   checkLogin: async () => true, // 未登录会被导向 /i/flow/login(pathname 不含 compose)
 
+  probe: () => [
+    { name: '推文输入框', ok: !!document.querySelector(SELECTORS.editor) },
+    { name: '图片上传', ok: !!document.querySelector(SELECTORS.fileInput) },
+  ],
+
   async fill(task: Task): Promise<FillResult> {
     const v = task.variants.x;
     if (!v?.body) return { ok: false, failedStep: '前置检查', reason: '请先在撰写页填写 X 推文变体' };

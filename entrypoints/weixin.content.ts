@@ -1,4 +1,4 @@
-import { runAdapter } from '../lib/adapters/runner';
+import { registerAdapter } from '../lib/adapters/runner';
 import { weixinAdapter, maybeRedirectToEditor } from '../lib/adapters/weixin';
 
 // 注:content script 仅在文档加载时执行一次。"去发布"开后台首页 → 本脚本探测到
@@ -6,10 +6,7 @@ import { weixinAdapter, maybeRedirectToEditor } from '../lib/adapters/weixin';
 export default defineContentScript({
   matches: ['https://mp.weixin.qq.com/*'],
   async main() {
-    if (weixinAdapter.isEditorPage()) {
-      await runAdapter(weixinAdapter);
-      return;
-    }
-    await maybeRedirectToEditor();
+    registerAdapter(weixinAdapter);
+    if (!weixinAdapter.isEditorPage()) await maybeRedirectToEditor();
   },
 });

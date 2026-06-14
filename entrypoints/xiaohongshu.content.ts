@@ -1,4 +1,4 @@
-import { runAdapter } from '../lib/adapters/runner';
+import { registerAdapter } from '../lib/adapters/runner';
 import { xiaohongshuAdapter } from '../lib/adapters/xiaohongshu';
 
 // 注:content script 仅在文档加载时执行一次。工作流(撰写页→"去发布"→新标签)
@@ -6,6 +6,6 @@ import { xiaohongshuAdapter } from '../lib/adapters/xiaohongshu';
 export default defineContentScript({
   matches: ['https://creator.xiaohongshu.com/*'],
   async main() {
-    await runAdapter(xiaohongshuAdapter);
+    registerAdapter(xiaohongshuAdapter);
   },
 });
