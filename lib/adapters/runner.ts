@@ -1,7 +1,21 @@
 import { browser } from 'wxt/browser';
 import type { Adapter } from './types';
-import type { ClaimTaskResponse, Msg } from '../messaging';
+import type { ClaimTaskResponse, Msg, SelfCheckMsg, SelfCheckResponse } from '../messaging';
 import type { PlatformStatus } from '../tasks';
+
+/** 注册适配器:监听 popup 的自检请求 + 启动通用填充流程。content script 入口统一调用此函数。 */
+export function registerAdapter(adapter: Adapter): void {
+  browser.runtime.onMessage.addListener((msg: unknown) => {
+    if ((msg as SelfCheckMsg | undefined)?.kind === 'self-check' && adapter.isEditorPage()) {
+      return Promise.resolve({
+        platformId: adapter.platformId,
+        results: adapter.probe?.() ?? [],
+      } satisfies SelfCheckResponse);
+    }
+    return undefined; // 非自检消息:不处理
+  });
+  void runAdapter(adapter);
+}
 
 /** 通用流程:编辑器页 → 认领任务 → 登录检查 → 填充 → 回报。无任务则静默退出。 */
 export async function runAdapter(adapter: Adapter): Promise<void> {

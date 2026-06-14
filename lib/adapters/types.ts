@@ -9,6 +9,12 @@ export interface FillResult {
   reason?: string;
 }
 
+/** 自检:某个关键选择器在当前编辑器页是否命中 */
+export interface ProbeResult {
+  name: string;
+  ok: boolean;
+}
+
 export interface Adapter {
   platformId: PlatformId;
   /** 当前页面是否为该平台编辑器页。适配器挂在全域名上,只在编辑器页认领任务 —
@@ -17,4 +23,6 @@ export interface Adapter {
   /** 编辑器页层面的登录态检查(多数平台到得了编辑器即已登录,返回 true 即可) */
   checkLogin(): Promise<boolean>;
   fill(task: Task): Promise<FillResult>;
+  /** 自检:逐个检查关键选择器是否命中(平台改版时定位失效项)。仅在编辑器页有意义。 */
+  probe?(): ProbeResult[];
 }

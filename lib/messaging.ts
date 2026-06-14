@@ -39,3 +39,12 @@ export interface PeekTaskResponse {
 }
 
 export type Msg = StartFillMsg | ClaimTaskMsg | ReportFillMsg | PeekTaskMsg;
+
+/** popup → content script(经 tabs.sendMessage 直达):请求当前页适配器自检 */
+export interface SelfCheckMsg {
+  kind: 'self-check';
+}
+export interface SelfCheckResponse {
+  platformId: PlatformId;
+  results: import('./adapters/types').ProbeResult[];
+}
