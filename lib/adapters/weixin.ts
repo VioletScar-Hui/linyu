@@ -4,7 +4,7 @@ import type { Task } from '../tasks';
 import { renderSegments } from '../markdown';
 import { stripMarkdown } from '../xhs';
 import {
-  waitFor, pasteHtml, pasteText, pasteFiles, setNativeValue, setInputFiles, dataUrlToFile, sleep,
+  waitFor, pasteHtml, pasteText, pasteFiles, setNativeValue, dataUrlToFile, sleep,
 } from './fill-utils';
 import { buildWeixinEditorUrl } from '../weixin-url';
 import type { Msg, PeekTaskResponse } from '../messaging';
@@ -17,8 +17,8 @@ const SELECTORS = {
   digest: '#js_description', // TEXTAREA
   // #ueditor_0 现为 div.mock-iframe(非 iframe),正文是其中的 ProseMirror
   editor: '#ueditor_0 .ProseMirror',
-  // 编辑页加载时封面区内无 file input(唯一 file input 属于工具栏插图菜单,勿用!),仅短探测后降级
-  coverFileInput: '#js_cover_area input[type="file"]',
+  // 公众号封面不支持本地上传,只能"从正文选择"/"从图片库选择";正文图已填,自动点"从正文选择"
+  coverFromContent: 'a[class*="selectCoverFromConten"]',
 };
 
 /** 非编辑器页(如后台首页)且存在待填充任务时,用 URL 里的 token 直跳新建图文编辑器。
@@ -49,7 +49,7 @@ export const weixinAdapter: Adapter = {
     { name: '标题编辑器', ok: !!document.querySelector(SELECTORS.titleEditor) },
     { name: '摘要框', ok: !!document.querySelector(SELECTORS.digest) },
     { name: '正文编辑器', ok: !!document.querySelector(SELECTORS.editor) },
-    { name: '封面上传(常缺,降级正常)', ok: !!document.querySelector(SELECTORS.coverFileInput) },
+    { name: '封面"从正文选择"(需展开封面区)', ok: !!document.querySelector(SELECTORS.coverFromContent) },
   ],
 
   async fill(task: Task): Promise<FillResult> {
@@ -100,18 +100,16 @@ export const weixinAdapter: Adapter = {
       return { ok: false, failedStep: '填正文', reason: '编辑器未接受粘贴内容' };
     }
 
-    // 4. 封面:实测编辑页无封面 file input,短探测后降级为提示手动
+    // 4. 封面:公众号封面不支持本地上传,只能"从正文选择"/"从图片库选择"。
+    //    正文图已填好,自动点击"从正文选择"打开选图,由用户在弹出处挑一张(半自动)。
     const cover = task.images.find((i) => i.filename === task.coverFilename);
     if (cover) {
       try {
-        const input = await waitFor(
-          () => document.querySelector<HTMLInputElement>(SELECTORS.coverFileInput),
-          3_000,
-        );
-        setInputFiles(input, [dataUrlToFile(cover.dataUrl, cover.filename)]);
-        return { ok: true, note: '请确认封面上传与裁剪结果' };
+        const btn = await waitFor(() => document.querySelector<HTMLElement>(SELECTORS.coverFromContent), 3_000);
+        btn.click();
+        return { ok: true, note: '已打开"从正文选择",请挑一张作封面(公众号封面不支持直接上传)' };
       } catch {
-        return { ok: true, note: '正文已填充;封面请在封面区手动"从正文选择"(图片已在正文中)' };
+        return { ok: true, note: '正文已填充;请在封面区点"从正文选择"挑一张(公众号封面不支持直接上传)' };
       }
     }
     return { ok: true };
