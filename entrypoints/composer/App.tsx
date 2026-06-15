@@ -29,6 +29,15 @@ const field: React.CSSProperties = {
   padding: '11px 14px', fontSize: 14, fontFamily: T.fontSans, color: T.text, background: T.card,
 };
 
+/** 聚焦编辑区、定位光标,并把光标所在行滚动到可见区域中部(插入图片/片段后定位) */
+function focusCaretLine(ta: HTMLTextAreaElement, caret: number, fullMd: string) {
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = caret;
+  const line = fullMd.slice(0, caret).split('\n').length - 1; // 0-based 目标行(按换行估算)
+  const lh = parseFloat(getComputedStyle(ta).lineHeight) || 20;
+  ta.scrollTop = Math.max(0, line * lh - ta.clientHeight / 2);
+}
+
 export function App({ initial }: { initial?: Task } = {}) {
   const [task, setTask] = useState<Task>(() => initial ?? newTask({ title: '', markdown: '' }));
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -130,10 +139,20 @@ export function App({ initial }: { initial?: Task } = {}) {
   // 追踪最近一次正文光标位置(普通/全屏两个编辑区共用),插图插到光标处
   const mdCaretRef = useRef<number | null>(null);
   const activeMdRef = useRef<HTMLTextAreaElement | null>(null);
+  const pendingScrollRef = useRef<number | null>(null);
   const trackCaret = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
     mdCaretRef.current = e.currentTarget.selectionStart;
     activeMdRef.current = e.currentTarget;
   };
+
+  // 插入图片/片段后,等新正文渲染到 DOM 再把光标行滚到可见区(放 effect 里避免被重渲染重置 scrollTop)
+  useEffect(() => {
+    const caret = pendingScrollRef.current;
+    if (caret == null) return;
+    pendingScrollRef.current = null;
+    const ta = activeMdRef.current;
+    if (ta && document.contains(ta)) focusCaretLine(ta, caret, task.markdown);
+  }, [task.markdown]);
 
   const insertImage = (filename: string) => {
     const { markdown: md, caret } = insertImageRef(
@@ -141,14 +160,8 @@ export function App({ initial }: { initial?: Task } = {}) {
     );
     setTask((t) => ({ ...t, markdown: md }));
     mdCaretRef.current = caret;
+    pendingScrollRef.current = caret; // 渲染后由 effect 滚动到插入行
     flash(`已插入 ${filename}`);
-    requestAnimationFrame(() => {
-      const ta = activeMdRef.current;
-      if (ta && document.contains(ta)) {
-        ta.focus();
-        ta.selectionStart = ta.selectionEnd = caret;
-      }
-    });
   };
 
   const editImageByName = (filename: string) => {
@@ -160,13 +173,11 @@ export function App({ initial }: { initial?: Task } = {}) {
   const insertSnippet = (content: string) => {
     const md = latestTask.current.markdown;
     const pos = mdCaretRef.current ?? md.length;
+    const newMd = md.slice(0, pos) + content + md.slice(pos);
     const caret = pos + content.length;
-    setTask((t) => ({ ...t, markdown: md.slice(0, pos) + content + md.slice(pos) }));
+    setTask((t) => ({ ...t, markdown: newMd }));
     mdCaretRef.current = caret;
-    requestAnimationFrame(() => {
-      const ta = activeMdRef.current;
-      if (ta && document.contains(ta)) { ta.focus(); ta.selectionStart = ta.selectionEnd = caret; }
-    });
+    pendingScrollRef.current = caret;
   };
 
   // 正文编辑区粘贴:截图等剪贴板图片直接入库并插到光标处
