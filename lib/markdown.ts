@@ -3,13 +3,18 @@ import { basename } from './images';
 
 const md = new MarkdownIt({ html: false, linkify: true });
 
+/** markdown-it 会对图片 src 做 URL 编码(含空格的文件名 → %20),解码回原文件名再查表 */
+function safeDecode(s: string): string {
+  try { return decodeURIComponent(s); } catch { return s; }
+}
+
 // 自定义图片渲染:本地引用按文件名查 env.imageMap 换成 dataUrl
 const defaultImage = md.renderer.rules.image!;
 md.renderer.rules.image = (tokens, idx, opts, env, self) => {
   const token = tokens[idx];
   const src = token.attrGet('src') ?? '';
   if (!/^(https?:|data:)/i.test(src)) {
-    const name = basename(src);
+    const name = basename(safeDecode(src));
     const map = (env?.imageMap as Record<string, string> | undefined) ?? {};
     const mapped = map[name];
     if (mapped) {
@@ -48,7 +53,7 @@ export function renderSegments(markdown: string, localFilenames: string[]): Cont
   for (const m of html.matchAll(re)) {
     const before = html.slice(last, m.index);
     if (hasContent(before)) segments.push({ kind: 'html', html: before });
-    segments.push({ kind: 'image', filename: m[1] });
+    segments.push({ kind: 'image', filename: safeDecode(m[1]) }); // src 可能被 URL 编码
     last = (m.index ?? 0) + m[0].length;
   }
   const tail = html.slice(last);
@@ -60,9 +65,12 @@ export function renderSegments(markdown: string, localFilenames: string[]): Cont
  *  找不到引用或已到边界时原样返回。 */
 export function moveImageBlock(markdown: string, filename: string, dir: 'up' | 'down'): string {
   const blocks = markdown.split(/\n{2,}/);
-  const refRe = /!\[[^\]]*\]\(\s*([^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+  const refRe = /!\[[^\]]*\]\(\s*(?:<([^>]+)>|([^)\s]+))(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
   const idx = blocks.findIndex((b) =>
-    [...b.matchAll(refRe)].some((m) => !/^(https?:|data:)/i.test(m[1]) && basename(m[1]) === filename),
+    [...b.matchAll(refRe)].some((m) => {
+      const ref = m[1] ?? m[2];
+      return !/^(https?:|data:)/i.test(ref) && basename(ref) === filename;
+    }),
   );
   if (idx < 0) return markdown;
   const to = dir === 'up' ? idx - 1 : idx + 1;
@@ -82,7 +90,8 @@ export function insertImageRef(
   const p = Math.max(0, Math.min(pos ?? markdown.length, markdown.length));
   const before = markdown.slice(0, p);
   const after = markdown.slice(p);
-  const snippet = `![](${filename})`;
+  // 文件名含空格/括号等会破坏 ![](url) 语法,用尖括号包裹(markdown 标准)
+  const snippet = /[\s()<>]/.test(filename) ? `![](<${filename}>)` : `![](${filename})`;
   const sepBefore = before === '' ? '' : before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
   const sepAfter = after === '' ? '\n' : after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
   const head = before + sepBefore + snippet;

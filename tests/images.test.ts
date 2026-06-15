@@ -31,6 +31,10 @@ describe('extractImageRefs', () => {
   it('单引号标题也能提取', () => {
     expect(extractImageRefs("![a](a.png 'note')")).toEqual(['a.png']);
   });
+
+  it('提取尖括号包裹的含空格文件名', () => {
+    expect(extractImageRefs('![](<图 1.png>)\n![](<my photo.jpg>)')).toEqual(['图 1.png', 'my photo.jpg']);
+  });
 });
 
 describe('matchImages', () => {

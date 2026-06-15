@@ -1,6 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import { renderHtml, deriveTitle, renderSegments, moveImageBlock, insertImageRef } from '../lib/markdown';
 
+describe('含空格文件名(尖括号语法)全链路', () => {
+  it('insertImageRef 含空格文件名用尖括号包裹', () => {
+    expect(insertImageRef('段', '图 1.png').markdown).toContain('![](<图 1.png>)');
+    expect(insertImageRef('段', 'a.png').markdown).toContain('![](a.png)'); // 无空格不加尖括号
+  });
+
+  it('renderHtml 渲染尖括号引用并替换为 dataUrl', () => {
+    const html = renderHtml('![](<图 1.png>)', { '图 1.png': 'data:image/png;base64,XX' });
+    expect(html).toContain('src="data:image/png;base64,XX"');
+    expect(html).toContain('data-ly-img="图 1.png"');
+  });
+
+  it('moveImageBlock 识别尖括号引用并移动', () => {
+    const md = '段一\n\n![](<图 1.png>)\n\n段二';
+    expect(moveImageBlock(md, '图 1.png', 'down')).toBe('段一\n\n段二\n\n![](<图 1.png>)');
+  });
+
+  it('renderSegments 对含空格文件名解码还原', () => {
+    const segs = renderSegments('![](<图 1.png>)', ['图 1.png']);
+    expect(segs).toEqual([{ kind: 'image', filename: '图 1.png' }]);
+  });
+});
+
 describe('insertImageRef', () => {
   it('默认插到文末并自成一块', () => {
     const r = insertImageRef('段一', 'a.png');

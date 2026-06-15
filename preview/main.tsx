@@ -41,6 +41,7 @@ const demoTask: Task = {
     demoImage('cover.jpg', '#1e3a44', '#c9a86a', '灵羽 · 封面'),
     demoImage('fig-1.jpg', '#2d4a6b', '#3a8a6d', '配图一'),
     demoImage('fig-2.jpg', '#7c5cbf', '#ff2442', '配图二'),
+    demoImage('截图 1.png', '#16242c', '#e6a23c', '含空格名'),
   ],
   coverFilename: 'cover.jpg',
   variants: {
