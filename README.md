@@ -1,19 +1,17 @@
-# 灵羽 · 多平台分发助手
+# 灵羽 · 多平台分发助手 v2
 
 [中文](README.md) | [English](README.en.md)
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-111827)
-![Platforms](https://img.shields.io/badge/Platforms-7+-00B96B)
-![Language](https://img.shields.io/badge/Language-ZH%20%2B%20EN-blue)
+![Version](https://img.shields.io/badge/Version-v2-8B5CF6)
+![Platforms](https://img.shields.io/badge/Auto--fill-7%20platforms-00B96B)
+![Stack](https://img.shields.io/badge/WXT%20%2B%20React%20%2B%20TypeScript-111827)
 ![License](https://img.shields.io/github/license/VioletScar-Hui/linyu)
-![Status](https://img.shields.io/badge/Status-Active-success)
 
-`linyu` 是一个 Chrome Manifest V3 多平台内容分发插件。它面向需要把同一篇 Markdown 文章和配图分发到微信公众号、知乎、小红书、B 站专栏、人人都是产品经理、X 和 Reddit 的创作者，把“撰写、改写、配图、填充、检查”集中到一个半自动工作流里。
+`linyu` 是一个 Chrome Manifest V3 插件，面向需要把同一篇 Markdown 长文和本地配图分发到多个内容平台的创作者。v2 把“撰写、配图、短文案变体、发布前检查、跳转填充、历史管理、备份恢复”整合到一个本地优先的半自动发布工作流里。
 
-插件不会调用平台私有发布 API，也不会替用户直接点击最终发布按钮。它负责在浏览器端打开对应平台编辑器并填充内容，最终发布动作仍由用户检查后确认。
-
-本仓库是插件**源码**（TypeScript + WXT + React），可由 `npm run build` 构建出可加载的 Chrome 扩展。运行期草稿历史、浏览器本地存储、调试缓存和构建目录（`.output/`、`.wxt/`）不会提交到仓库。
+灵羽不会调用平台私有发布 API，也不会替你点击最终发布按钮。它负责打开目标平台编辑器并尽量填充标题、正文、图片或短文案，最终发布仍由你在平台页面人工确认。
 
 ---
 
@@ -23,42 +21,57 @@
 
 ![灵羽多平台分发总览](assets/intro-01-overview.png)
 
-在插件弹窗中新建分发任务，粘贴 Markdown 正文并加入本地配图，然后按平台生成对应内容版本。灵羽会把长文、配图和平台入口整理成一条清晰的发布链路。
+在撰写台中新建任务，粘贴 Markdown 正文、导入本地配图，并为不同平台准备对应版本。长文平台使用完整正文，短内容平台使用自动生成或手动编辑的短文案变体。
 
 ### 2. 半自动填充，人工确认
 
 ![灵羽半自动填充与人工确认](assets/intro-02-human-review.png)
 
-灵羽负责把标题、正文、图片和标签填充到目标平台编辑器中；你仍然保留最终检查和手动发布的控制权，适合需要质量把关的内容工作流。
+灵羽把内容送到平台原生编辑器中，保留平台自己的登录、审核、预览和发布流程。适合需要效率，但又不能放弃人工质检的内容分发场景。
 
-### 3. 安全本地发布工作流
+### 3. 本地优先，避免上传历史
 
-![灵羽安全本地发布工作流](assets/intro-03-local-safety.png)
+![灵羽本地安全发布工作流](assets/intro-03-local-safety.png)
 
-插件以本地优先为边界：不保存账号密码，不上传浏览器历史，不调用平台私有发布 API。自动填充失败时，可以使用复制富文本作为兜底方案。
+任务草稿、图片和设置保存在浏览器本地存储中；仓库不会提交运行期历史、构建产物和调试缓存。自动填充失效时，可以用“复制富文本”作为兜底方案。
+
+---
+
+## v2 重点
+
+- **7 个自动填充平台**：微信公众号、知乎专栏、小红书、B 站专栏、人人都是产品经理、X、Reddit。
+- **7 个快捷跳转平台**：微博头条文章、简书、掘金、CSDN、今日头条、豆瓣、Medium，可在设置里按需启用。
+- **撰写台升级**：Markdown 编辑、HTML 预览、全屏分屏、常用片段、一键复制富文本。
+- **图片工作流**：拖入图片、截图粘贴入库、按光标插图、封面标记、预览中移动图片、裁剪/旋转/翻转/压缩。
+- **平台变体**：为小红书、X、Reddit 生成独立标题或正文变体，并允许发布前手动调整。
+- **发布前体检**：按平台检查标题、正文、图片、封面、字数和缺失变体，给出红/黄/绿状态。
+- **历史与备份**：任务自动保存，历史列表支持搜索、删除、复制为新任务；设置页支持全量导出/导入。
+- **维护工具**：平台适配器支持当前页面自检，便于定位页面改版后失效的选择器。
+- **工程化**：WXT + React + TypeScript，Vitest 单测，ESLint，GitHub Actions 自动运行 lint/test/build。
+- **作品展示站**：`showcase/` 内置独立 Astro 案例站，可放到个人网站或单独部署。
 
 ---
 
 ## 适用场景
 
-适合使用灵羽的情况：
+适合：
 
-- 同一篇长文需要同步发布到多个内容平台。
-- Markdown 正文中包含本地配图，需要在不同平台保持基本排版。
-- 小红书、X、Reddit 等短内容平台需要从长文生成更短的文案变体。
-- 发布前仍希望由人最终检查标题、图片、正文和平台规则。
+- 一篇长文需要同步分发到多个内容平台。
+- Markdown 正文包含本地图片，希望尽量保持基础排版。
+- 小红书、X、Reddit 等平台需要从长文改写出短版本。
+- 发布前仍希望人工检查平台规则、图片、标题和最终效果。
 
-不适合的场景：
+不适合：
 
-- 需要绕过平台审核或自动点击最终发布按钮。
-- 需要调用平台私有接口批量发布。
-- 需要保存账号密码、Cookie 或平台登录凭据。
+- 绕过平台审核或自动点击最终发布按钮。
+- 通过平台私有 API 批量发布。
+- 保存账号密码、Cookie 或平台登录凭据。
 
 ---
 
 ## 安装
 
-本仓库是源码，需先构建出扩展再加载：
+本仓库是插件源码，需要先构建，再在 Chrome 中加载：
 
 ```powershell
 git clone https://github.com/VioletScar-Hui/linyu.git
@@ -67,122 +80,95 @@ npm install
 npm run build
 ```
 
-构建产物在 `.output/chrome-mv3`。然后在 Chrome 中：
+构建产物位于 `.output/chrome-mv3`。打开 Chrome：
 
 ```text
 chrome://extensions
 ```
 
-开启“开发者模式”，选择“加载已解压的扩展程序”，选择 `.output/chrome-mv3` 目录（其中的 `manifest.json` 是插件入口）。
+开启“开发者模式”，点击“加载已解压的扩展程序”，选择 `.output/chrome-mv3` 目录。
 
-> 改了源码后重新 `npm run build`，并在扩展页点刷新即可生效。
+改动源码后，重新运行 `npm run build`，并在扩展管理页点击重新加载。
 
 ---
 
-## 第一次成功运行
-
-安装完成后：
+## 第一次运行
 
 1. 点击浏览器工具栏中的灵羽图标。
-2. “新建分发”，粘贴 Markdown 正文并拖入配图（可点缩略图裁剪/旋转/压缩，或插入到正文）。
-3. 按目标平台生成文案变体，或长文平台直接用正文。
-4. 看“发布前体检”确认无红黄问题后，点目标平台的“去发布”，插件会打开平台编辑器并填充。
-5. 人工检查内容后，在平台页面完成最终发布。
+2. 新建分发任务，输入标题，粘贴 Markdown 正文。
+3. 拖入本地图片，或在正文编辑区用 `Ctrl+V` 粘贴截图。
+4. 需要时把图片插入到正文光标处，或在图片库中设置封面、裁剪、旋转、压缩。
+5. 在变体面板生成或编辑小红书、X、Reddit 文案。
+6. 查看发布前体检，确认没有阻断项。
+7. 在平台栏选择目标平台并发起填充。
+8. 到平台页面人工检查，最后手动发布。
 
 ---
 
 ## 支持平台
 
-有自动填充适配器的 7 个平台：
+### 自动填充
 
 | 平台 | 匹配范围 | 当前能力 |
-|---|---|---|
-| 微信公众号 | `mp.weixin.qq.com` | 标题/摘要/正文含图填充；多账号选号直达；封面自动点“从正文选择” |
-| 知乎专栏 | `zhuanlan.zhihu.com` | 文章编辑器填充，图片走知乎上传通道 |
-| 小红书创作服务平台 | `creator.xiaohongshu.com` | 切“上传图文”、配图上传、短文案变体填充 |
-| B 站创作中心 | `member.bilibili.com` | 专栏标题/正文填充（图片需在编辑器内确认） |
-| 人人都是产品经理 | `woshipm.com` | 文章标题/正文填充 |
-| X | `x.com` | 推文短文案 + 配图填充 |
-| Reddit | `reddit.com` / `old.reddit.com` | 标题 + Markdown 正文填充 |
+| --- | --- | --- |
+| 微信公众号 | `mp.weixin.qq.com` | 标题、摘要、正文含图填充；多账号跳转；封面从正文选择 |
+| 知乎专栏 | `zhuanlan.zhihu.com` | 标题、正文和图片填充 |
+| 小红书创作服务平台 | `creator.xiaohongshu.com` | 切换图文入口、上传图片、填写标题和正文变体 |
+| B 站专栏 | `member.bilibili.com` | 专栏标题和正文填充，图片需在编辑器内确认 |
+| 人人都是产品经理 | `woshipm.com` | 文章标题和正文填充 |
+| X | `x.com` | 推文变体和图片填充 |
+| Reddit | `reddit.com` / `old.reddit.com` | 标题和 Markdown 正文填充 |
 
-另含**快捷跳转**（暂无适配器，可在设置中按需启用）：微博头条文章、简书、掘金、CSDN、今日头条、豆瓣、Medium。
+### 快捷跳转
 
-平台页面会持续改版。如果某个平台填充失败，先用插件的“复制富文本”兜底；再在该平台编辑器页打开 popup 点“🩺 自检当前页适配器”定位失效的选择器，改对应 `lib/adapters/<平台>.ts` 顶部的 `SELECTORS` 后重新构建。
+微博头条文章、简书、掘金、CSDN、今日头条、豆瓣、Medium 暂时只提供创作入口跳转。平台可在设置中启用或关闭。
 
----
-
-## 核心能力
-
-### 多平台半自动填充
-
-- 根据目标平台打开对应编辑入口，填充标题、正文、图片或短文案。
-- 支持勾选多个平台一键批量发起；公众号支持多账号选号直达编辑器。
-- 保留平台原生发布确认流程。
-
-### Markdown 与配图工作流
-
-- 以 Markdown 长文作为主输入，本地配图随任务组织、按文件名匹配。
-- 插件内图片编辑：裁剪 / 旋转 / 翻转 / 质量压缩，改完同名替换。
-- 配图可插入正文任意位置（光标处）；预览中点击图片可上移/下移调位或编辑；支持全屏分屏编辑。
-- 截图可直接 Ctrl+V 入库并插到光标处；为小红书 / X / Reddit 生成短文案变体。
-
-### 发布与数据安全
-
-- 发布前体检：七平台字数/格式/缺图/缺变体逐项红黄绿灯。
-- 草稿自动保存、历史管理（搜索/删除/复制为新任务）、全量导出/导入备份。
-- 不保存账号密码，不提交运行期历史，不上传浏览器本地存储，不调用平台私有发布接口。
+平台页面会变化。如果某个平台填充失败，先使用“复制富文本”手动粘贴；再在平台编辑器页面打开 popup，点击当前页面适配器自检，查看失效选择器，并更新 `lib/adapters/<platform>.ts` 中的 `SELECTORS`。
 
 ---
 
-## 迭代概要
+## 数据与隐私
 
-- **多平台适配**：从公众号 / 知乎 / 小红书 / 人人都是产品经理 4 个平台，扩展到 + B 站 / X / Reddit 共 **7 个自动填充平台**（选择器均经真机实测）；另加 7 个快捷跳转平台（微博 / 简书 / 掘金 / CSDN / 今日头条 / 豆瓣 / Medium）。
-- **灵羽视觉**：墨青 / 鎏金 / 宣纸配色体系、羽毛标识、应用图标，Popup 与撰写台统一改版。
-- **图片能力**：插件内裁剪 / 旋转 / 翻转 / 质量压缩；配图插入正文光标处；预览中点图上移 / 下移 / 编辑；截图 Ctrl+V 直接入库；全屏分屏编辑。
-- **文案与分发**：小红书 / X / Reddit 短文案变体；一键多平台批量填充；公众号多账号选号直达 + 登录态提示；公众号封面自动“从正文选择”。
-- **质量与效率**：发布前体检（字数 / 格式 / 缺图 / 缺变体红黄绿灯）；草稿自动保存；常用片段一键插入；历史搜索 / 删除 / 复制为新任务。
-- **数据与维护**：每任务独立存储 + 轻量索引（随使用不卡）、旧数据自动迁移；全量导出 / 导入备份；平台在设置中按需启用；popup 适配器自检定位失效选择器。
-- **工程化**：ESLint + GitHub Actions CI（push/PR 自动 lint + test + build）+ 撰写台可视化预览。
+- 任务正文、图片、平台状态和设置存储在浏览器 `storage.local`。
+- v2 使用 `task:{id}` + `taskIndex` 的拆分存储，历史列表只读取轻量索引，避免每次加载都读入全部图片。
+- 最多保留最近 20 个任务，超出后自动清理旧任务。
+- 支持导出/导入包含任务和设置的 JSON 备份。
+- 不保存账号密码、Cookie 或平台登录凭据。
+- 不上传浏览器历史，不提交运行期任务历史。
+- `.gitignore` 排除了 `node_modules/`、`.wxt/`、`.output/`、`preview/out.js`。
 
----
-
-## 仓库结构
-
-```text
-linyu/
-  entrypoints/              # WXT 入口:popup / composer 撰写台 / 各平台 content script / background
-  lib/                      # 纯逻辑:markdown、images、tasks、platforms、settings、backup、preflight
-  lib/adapters/             # 各平台适配器(SELECTORS + 填充/自检逻辑)
-  lib/ui.tsx                # 灵羽设计系统(配色/羽毛标识/通用组件)
-  tests/                    # Vitest 单测
-  preview/                  # 撰写台可视化预览(stub 扩展 API,免加载扩展看 UI)
-  scripts/gen-icons.mjs     # 生成应用图标
-  docs/superpowers/         # 设计文档 / 实施计划 / 适配器验收清单
-  wxt.config.ts             # WXT 配置(manifest、权限、图标)
-  eslint.config.js          # ESLint 扁平配置
-  .github/workflows/ci.yml  # CI:push/PR 自动 lint + test + build
-  public/                   # WXT 静态资源(应用图标)
-  showcase/                 # Linyu 案例展示站(独立 Astro 项目)
-  assets/                   # README 图文介绍图片
-  README.md / README.en.md / LICENSE
-```
+默认 Chrome 用户数据通常位于系统用户目录下，插件的运行期本地数据由浏览器管理；仓库中的源码、构建产物和浏览器本地历史是两回事。
 
 ---
 
-## 开发
+## 本地开发
 
 ```powershell
-npm run dev        # 热重载开发
-npm test           # Vitest 单测
+npm run dev        # WXT 热重载开发
+npm test           # Vitest 单元测试
 npm run lint       # ESLint 检查
 npm run build      # 构建到 .output/chrome-mv3
-npm run preview    # 撰写台可视化预览(http://localhost:5199,免加载扩展)
-npm run icons      # 重新生成应用图标
+npm run preview    # 撰写台可视化预览，默认 http://localhost:5199
+npm run icons      # 重新生成插件图标
 ```
 
-提交到 `main` 或任意 PR 会触发 GitHub Actions（`.github/workflows/ci.yml`）自动跑 `lint → test → build`，任一失败即拦住。
+CI 位于 `.github/workflows/ci.yml`，在 push 和 pull request 时运行：
 
-`showcase/` 是一个独立的 Astro 案例展示站（与插件源码并存于仓库），有自己的依赖，可单独运行：
+```text
+npm ci -> npm run lint -> npm test -> npm run build
+```
+
+---
+
+## 作品展示站
+
+`showcase/` 是一个独立 Astro 项目，用来把灵羽放到个人网站作品集中展示。它包含：
+
+- 首页作品区入口卡。
+- `/projects/linyu` 独立详情页。
+- `/components` 项目卡片组件状态页。
+
+本地运行：
 
 ```powershell
 cd showcase
@@ -190,21 +176,48 @@ npm install
 npm run dev
 ```
 
+部署到 Vercel、Netlify 或 Cloudflare Pages 时，把 Root Directory 设置为 `showcase`，构建命令使用 `npm run build`，输出目录为 `dist`。
+
 ---
 
-## 常见问题
+## 仓库结构
 
-### 为什么不是自动发布？
+```text
+linyu/
+  entrypoints/              # WXT 入口：popup、composer、content scripts、background
+  entrypoints/composer/     # 撰写台：历史、图片、变体、预检、设置、预览
+  lib/                      # Markdown、图片、任务、设置、备份、预检等纯逻辑
+  lib/adapters/             # 各平台 SELECTORS、填充逻辑和自检逻辑
+  preview/                  # 撰写台可视化预览服务
+  public/                   # WXT 静态资源和插件图标
+  scripts/                  # 图标生成脚本
+  showcase/                 # 独立 Astro 作品展示站
+  tests/                    # Vitest 单元测试
+  assets/                   # README 介绍图
+  wxt.config.ts             # WXT 配置和 Manifest 信息
+  eslint.config.js          # ESLint flat config
+  .github/workflows/ci.yml  # CI
+```
 
-不同平台的审核规则、编辑器状态和账号权限都不同。灵羽只做内容填充和辅助跳转，最终发布由用户在平台页面手动确认。
+---
 
-### 会上传我的历史记录吗？
+## FAQ
 
-不会。所有任务与设置都存在浏览器本地（`storage.local`），插件不需要也不会提交浏览器历史、账号密码或 Cookie。`.gitignore` 已排除 `.output/`、`.wxt/`、`node_modules/` 等。
+### 为什么不是全自动发布？
 
-### 平台填充失败怎么办？
+不同平台的登录、审核、编辑器状态和发布确认都不同。灵羽只做内容填充和辅助跳转，最终发布由用户在平台页面手动确认。
 
-优先使用插件中的“复制富文本”兜底，把内容手动粘贴到平台编辑器。然后在该平台编辑器页打开 popup 点“🩺 自检当前页适配器”，看哪个选择器失效（✗），改对应 `lib/adapters/<平台>.ts` 顶部的 `SELECTORS` 后 `npm run build` 重新加载。
+### 历史记录会上传到仓库或服务器吗？
+
+不会。任务历史保存在浏览器本地 `storage.local`，仓库只保存源码。构建目录、运行期缓存和本地依赖已通过 `.gitignore` 排除。
+
+### 自动填充失败怎么办？
+
+先使用“复制富文本”兜底，把内容手动粘贴到平台编辑器。之后在该平台页面打开灵羽 popup，运行当前页面适配器自检，根据结果更新对应适配器的选择器。
+
+### 为什么 README 里写 v2，`package.json` 还是 `1.0.0`？
+
+这里的 v2 指当前功能迭代版本和 README 展示版本，不等同于 npm 包发布版本。本项目是私有/个人插件源码仓库，尚未作为公开 npm 包发布。
 
 ---
 

@@ -1,19 +1,17 @@
-# Linyu · Multi-Platform Publishing Assistant
+# Linyu · Multi-Platform Publishing Assistant v2
 
 [中文](README.md) | [English](README.en.md)
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-111827)
-![Platforms](https://img.shields.io/badge/Platforms-7+-00B96B)
-![Language](https://img.shields.io/badge/Language-ZH%20%2B%20EN-blue)
+![Version](https://img.shields.io/badge/Version-v2-8B5CF6)
+![Auto-fill](https://img.shields.io/badge/Auto--fill-7%20platforms-00B96B)
+![Stack](https://img.shields.io/badge/WXT%20%2B%20React%20%2B%20TypeScript-111827)
 ![License](https://img.shields.io/github/license/VioletScar-Hui/linyu)
-![Status](https://img.shields.io/badge/Status-Active-success)
 
-`linyu` is a Chrome Manifest V3 extension for creators who publish the same Markdown article and local images across WeChat Official Accounts, Zhihu, Xiaohongshu, Bilibili columns, Woshipm, X, and Reddit. It turns writing, rewriting, image handling, editor filling, and final review into one semi-automated browser workflow.
+`linyu` is a Chrome Manifest V3 extension for creators who publish the same Markdown article and local images across multiple content platforms. v2 brings writing, image handling, short-form variants, pre-publish checks, editor filling, history management, and backup/restore into one local-first semi-automated workflow.
 
-The extension does not call private publishing APIs and does not click the final publish button for you. It opens the target platform editor, fills the content in the browser, and leaves the final publishing decision to the user.
-
-This repository holds the **source code** (TypeScript + WXT + React); `npm run build` produces a loadable Chrome extension. Runtime draft history, browser local storage, debug caches, and build folders (`.output/`, `.wxt/`) are intentionally excluded.
+Linyu does not call private publishing APIs and does not click the final publish button. It opens the target platform editor and fills the title, body, images, or short-form copy where possible. The final review and publish action stay with the user.
 
 ---
 
@@ -23,42 +21,57 @@ This repository holds the **source code** (TypeScript + WXT + React); `npm run b
 
 ![Linyu multi-platform overview](assets/intro-01-overview.png)
 
-Create a distribution task in the popup, paste your Markdown body and add local images, then generate per-platform variants. Linyu organizes the long article, images, and platform entries into one clear publishing path.
+Create a task in the composer, paste a Markdown body, import local images, and prepare per-platform versions. Long-form platforms use the full article, while short-form platforms use generated or manually edited variants.
 
 ### 2. Semi-Automated Filling, Human Confirmation
 
 ![Linyu semi-automated filling with human review](assets/intro-02-human-review.png)
 
-Linyu fills the title, body, images, and tags into the target editor; you keep full control over the final review and manual publish — ideal for content workflows that need quality gating.
+Linyu sends the content into native platform editors while keeping each platform's login, preview, review, and publish flow intact. It is designed for faster distribution without giving up manual quality control.
 
-### 3. Local-First Safe Publishing Workflow
+### 3. Local-First, No Uploaded History
 
 ![Linyu local-first safe publishing](assets/intro-03-local-safety.png)
 
-The extension stays local-first: no stored credentials, no uploaded browser history, no private publishing APIs. When auto-filling fails, copy-as-rich-text is the fallback.
+Drafts, images, and settings live in browser local storage. Runtime history, build output, and debug caches are not committed to the repository. If auto-fill breaks, copy-as-rich-text is available as a fallback.
+
+---
+
+## v2 Highlights
+
+- **7 auto-fill platforms**: WeChat Official Account, Zhihu Column, Xiaohongshu, Bilibili Column, Woshipm, X, and Reddit.
+- **7 quick-jump platforms**: Weibo article, Jianshu, Juejin, CSDN, Toutiao, Douban, and Medium, configurable in settings.
+- **Composer upgrade**: Markdown editing, HTML preview, full-screen split mode, reusable snippets, and one-click rich-text copy.
+- **Image workflow**: drag-and-drop import, screenshot paste, caret-position insertion, cover marking, preview reordering, crop, rotate, flip, and compression.
+- **Platform variants**: separate copy for Xiaohongshu, X, and Reddit, with manual edits before dispatch.
+- **Pre-publish inspection**: platform-level checks for title, body, images, cover, length, and missing variants.
+- **History and backup**: auto-save tasks, search/delete/duplicate history, and full JSON export/import.
+- **Maintenance tools**: adapter self-check helps locate broken selectors when platforms change their editors.
+- **Engineering**: WXT + React + TypeScript, Vitest, ESLint, and GitHub Actions for lint/test/build.
+- **Showcase site**: `showcase/` contains a standalone Astro case-study site for personal portfolio use.
 
 ---
 
 ## Use Cases
 
-A good fit when:
+Good fit:
 
-- The same long article needs to go out to multiple content platforms.
-- The Markdown body contains local images that should keep basic layout across platforms.
-- Short-form platforms (Xiaohongshu, X, Reddit) need shorter variants generated from the long article.
-- You still want a human to review title, images, body, and platform rules before publishing.
+- One long article needs to be published to several content platforms.
+- The Markdown body contains local images and should keep a basic layout.
+- Xiaohongshu, X, or Reddit need shorter versions derived from a long article.
+- You still want a human to review platform rules, images, title, and final rendering.
 
-Not a fit when:
+Not a fit:
 
-- You want to bypass platform review or auto-click the final publish button.
-- You need private bulk-publishing APIs.
-- You need to store credentials, cookies, or platform login tokens.
+- Bypassing platform review or auto-clicking final publish buttons.
+- Bulk publishing through private platform APIs.
+- Storing credentials, cookies, or platform login tokens.
 
 ---
 
 ## Installation
 
-This repo is source code — build the extension first, then load it:
+This repository contains source code. Build the extension first, then load it in Chrome:
 
 ```powershell
 git clone https://github.com/VioletScar-Hui/linyu.git
@@ -67,82 +80,103 @@ npm install
 npm run build
 ```
 
-The build output is in `.output/chrome-mv3`. Then in Chrome:
+The build output is `.output/chrome-mv3`. Open Chrome:
 
 ```text
 chrome://extensions
 ```
 
-Enable "Developer mode", choose "Load unpacked", and select the `.output/chrome-mv3` folder (its `manifest.json` is the entry point).
+Enable "Developer mode", click "Load unpacked", and select `.output/chrome-mv3`.
 
-> After editing source, run `npm run build` again and click reload on the extensions page.
+After editing source code, run `npm run build` again and reload the extension on the Chrome extensions page.
 
 ---
 
-## First Successful Run
+## First Run
 
-After installing:
-
-1. Click the Linyu icon in the toolbar.
-2. "New task", paste the Markdown body and drop in images (crop/rotate/compress via thumbnail, or insert into the body).
-3. Generate per-platform variants, or use the long body directly for long-form platforms.
-4. Check the "pre-publish inspection" for red/yellow issues, then click "Publish" for a platform — Linyu opens its editor and fills the content.
-5. Review manually, then complete the final publish on the platform page.
+1. Click the Linyu icon in the browser toolbar.
+2. Create a distribution task, enter a title, and paste the Markdown body.
+3. Drag in local images, or paste screenshots into the editor with `Ctrl+V`.
+4. Insert images at the caret position when needed, or use the image gallery to set a cover, crop, rotate, or compress.
+5. Generate or edit variants for Xiaohongshu, X, and Reddit.
+6. Review the pre-publish inspection panel.
+7. Select target platforms and dispatch filling.
+8. Review the native platform editor manually, then publish yourself.
 
 ---
 
 ## Supported Platforms
 
-Seven platforms with auto-fill adapters:
+### Auto-Fill
 
 | Platform | Match | Capability |
-|---|---|---|
-| WeChat Official Account | `mp.weixin.qq.com` | Title/summary/body-with-images fill; multi-account direct jump; cover via "select from body" |
-| Zhihu Column | `zhuanlan.zhihu.com` | Article editor fill; images go through Zhihu's upload pipeline |
-| Xiaohongshu Creator | `creator.xiaohongshu.com` | Switch to image tab, upload images, fill short-form variant |
-| Bilibili Creator | `member.bilibili.com` | Column title/body fill (confirm images inside editor) |
-| Woshipm | `woshipm.com` | Article title/body fill |
-| X | `x.com` | Tweet variant + image fill |
-| Reddit | `reddit.com` / `old.reddit.com` | Title + Markdown body fill |
+| --- | --- | --- |
+| WeChat Official Account | `mp.weixin.qq.com` | Title, summary, body-with-images; multi-account jump; cover selected from body |
+| Zhihu Column | `zhuanlan.zhihu.com` | Title, body, and image filling |
+| Xiaohongshu Creator | `creator.xiaohongshu.com` | Switch to image-post entry, upload images, fill title and body variant |
+| Bilibili Column | `member.bilibili.com` | Column title and body filling; images need editor confirmation |
+| Woshipm | `woshipm.com` | Article title and body filling |
+| X | `x.com` | Tweet variant and image filling |
+| Reddit | `reddit.com` / `old.reddit.com` | Title and Markdown body filling |
 
-Plus **quick-jump only** (no adapter yet, enable in settings as needed): Weibo article, Jianshu, Juejin, CSDN, Toutiao, Douban, Medium.
+### Quick Jump
 
-Platforms change their pages over time. If filling fails, use "copy rich text" as fallback; then on the platform editor page open the popup and click "🩺 self-check current page" to find the broken selector, and fix the `SELECTORS` at the top of `lib/adapters/<platform>.ts` before rebuilding.
+Weibo article, Jianshu, Juejin, CSDN, Toutiao, Douban, and Medium currently provide editor-entry jumps only. They can be enabled or disabled in settings.
 
----
-
-## Core Capabilities
-
-### Semi-Automated Multi-Platform Filling
-
-- Opens the right editor per platform and fills title, body, images, or short-form text.
-- Select multiple platforms for one-click batch dispatch; WeChat supports multi-account direct jump.
-- Keeps the platform's native publish confirmation.
-
-### Markdown and Image Workflow
-
-- Markdown long article as the main input; local images organized per task and matched by filename.
-- In-extension image editing: crop / rotate / flip / quality compression, replaced in place.
-- Insert images anywhere in the body (at the caret); in the preview, click an image to move it up/down or edit; full-screen split editing supported.
-- Paste screenshots directly with Ctrl+V into the body; generate short variants for Xiaohongshu / X / Reddit.
-
-### Publishing and Data Safety
-
-- Pre-publish inspection: per-platform red/yellow/green checks for length, format, missing images, missing variants.
-- Auto-save drafts; history management (search/delete/duplicate); full export/import backup.
-- No stored credentials, no committed runtime history, no uploaded local storage, no private publishing APIs.
+Platform pages change over time. If filling fails, use "copy rich text" as a manual fallback. Then open the popup on that platform editor page, run the current-page adapter self-check, and update the `SELECTORS` in `lib/adapters/<platform>.ts`.
 
 ---
 
-## What's Been Built
+## Data and Privacy
 
-- **Platform coverage**: grew from 4 (WeChat / Zhihu / Xiaohongshu / Woshipm) to **7 auto-fill platforms** (+ Bilibili / X / Reddit, all selectors verified on the real sites), plus 7 quick-jump platforms (Weibo / Jianshu / Juejin / CSDN / Toutiao / Douban / Medium).
-- **Linyu visuals**: ink-teal / gold / paper palette, feather mark, app icons; unified Popup and composer redesign.
-- **Image tooling**: in-extension crop / rotate / flip / quality compression; insert images at the caret; click an image in the preview to move up / down / edit; paste screenshots with Ctrl+V; full-screen split editing.
-- **Variants & dispatch**: short-form variants for Xiaohongshu / X / Reddit; one-click batch fill across platforms; WeChat multi-account direct jump + login-state reminder; WeChat cover auto "select from body".
-- **Quality & speed**: pre-publish inspection (length / format / missing image / missing variant); auto-save drafts; one-click snippet insertion; history search / delete / duplicate.
-- **Data & maintenance**: per-task storage + lightweight index (stays fast as it grows) with automatic migration; full export / import backup; per-platform enable in settings; popup self-check to locate broken selectors.
-- **Engineering**: ESLint + GitHub Actions CI (lint + test + build on push/PR) + composer visual preview.
+- Task bodies, images, platform status, and settings are stored in browser `storage.local`.
+- v2 stores tasks as `task:{id}` plus a lightweight `taskIndex`, so the history list does not load every image every time.
+- The extension keeps up to 20 recent tasks and prunes older ones.
+- JSON export/import backs up tasks and settings.
+- No credentials, cookies, or login tokens are stored.
+- Browser history is not uploaded, and runtime task history is not committed.
+- `.gitignore` excludes `node_modules/`, `.wxt/`, `.output/`, and `preview/out.js`.
+
+Chrome usually stores extension runtime data inside the user's browser profile. Repository source code, build output, and browser-local task history are separate things.
+
+---
+
+## Development
+
+```powershell
+npm run dev        # WXT hot-reload development
+npm test           # Vitest unit tests
+npm run lint       # ESLint
+npm run build      # build to .output/chrome-mv3
+npm run preview    # composer visual preview, usually http://localhost:5199
+npm run icons      # regenerate extension icons
+```
+
+CI lives in `.github/workflows/ci.yml` and runs on push and pull request:
+
+```text
+npm ci -> npm run lint -> npm test -> npm run build
+```
+
+---
+
+## Showcase Site
+
+`showcase/` is a standalone Astro project for presenting Linyu inside a personal portfolio. It includes:
+
+- A homepage project-card entrance.
+- `/projects/linyu`, the independent case-study page.
+- `/components`, project-card component states.
+
+Run locally:
+
+```powershell
+cd showcase
+npm install
+npm run dev
+```
+
+For Vercel, Netlify, or Cloudflare Pages, set the root directory to `showcase`, build command to `npm run build`, and output directory to `dist`.
 
 ---
 
@@ -150,44 +184,19 @@ Platforms change their pages over time. If filling fails, use "copy rich text" a
 
 ```text
 linyu/
-  entrypoints/              # WXT entries: popup / composer / per-platform content scripts / background
-  lib/                      # Pure logic: markdown, images, tasks, platforms, settings, backup, preflight
-  lib/adapters/             # Per-platform adapters (SELECTORS + fill/self-check logic)
-  lib/ui.tsx                # Linyu design system (palette / feather mark / shared components)
+  entrypoints/              # WXT entries: popup, composer, content scripts, background
+  entrypoints/composer/     # Composer UI: history, images, variants, preflight, settings, preview
+  lib/                      # Markdown, images, tasks, settings, backup, preflight logic
+  lib/adapters/             # Platform SELECTORS, filling logic, and self-checks
+  preview/                  # Composer visual preview server
+  public/                   # WXT static assets and extension icons
+  scripts/                  # Icon generation scripts
+  showcase/                 # Standalone Astro portfolio case-study site
   tests/                    # Vitest unit tests
-  preview/                  # Composer visual preview (stubs extension APIs; view UI without loading the ext)
-  scripts/gen-icons.mjs     # Icon generation
-  docs/superpowers/         # Design docs / plans / adapter acceptance checklist
-  wxt.config.ts             # WXT config (manifest, permissions, icons)
-  eslint.config.js          # ESLint flat config
-  .github/workflows/ci.yml  # CI: lint + test + build on push/PR
-  public/                   # WXT static assets (app icons)
-  showcase/                 # Linyu case-study showcase site (standalone Astro project)
   assets/                   # README visuals
-  README.md / README.en.md / LICENSE
-```
-
----
-
-## Development
-
-```powershell
-npm run dev        # hot-reload dev
-npm test           # Vitest unit tests
-npm run lint       # ESLint
-npm run build      # build to .output/chrome-mv3
-npm run preview    # composer visual preview (http://localhost:5199, no extension load)
-npm run icons      # regenerate app icons
-```
-
-Pushing to `main` or opening any PR triggers GitHub Actions (`.github/workflows/ci.yml`) to run `lint → test → build`; any failure blocks the change.
-
-`showcase/` is a standalone Astro case-study site (living alongside the extension source) with its own dependencies; run it separately:
-
-```powershell
-cd showcase
-npm install
-npm run dev
+  wxt.config.ts             # WXT config and manifest fields
+  eslint.config.js          # ESLint flat config
+  .github/workflows/ci.yml  # CI
 ```
 
 ---
@@ -196,15 +205,19 @@ npm run dev
 
 ### Why not fully automatic publishing?
 
-Review rules, editor state, and account permissions differ across platforms. Linyu only fills content and assists navigation; the final publish is confirmed by the user on the platform page.
+Login state, editor behavior, review rules, and publish confirmation differ by platform. Linyu only fills content and assists navigation; final publish is manually confirmed by the user.
 
-### Does Linyu upload my history?
+### Does Linyu upload my history to the repo or a server?
 
-No. All tasks and settings live in browser local storage (`storage.local`); the extension neither needs nor commits browser history, credentials, or cookies. `.gitignore` excludes `.output/`, `.wxt/`, `node_modules/`, etc.
+No. Task history lives in browser-local `storage.local`; the repository only stores source code. Build output, runtime caches, and local dependencies are excluded by `.gitignore`.
 
-### What if editor filling fails?
+### What if auto-fill fails?
 
-Use the in-extension "copy rich text" fallback to paste manually into the platform editor. Then on the platform editor page open the popup and click "🩺 self-check current page" to see which selector broke (✗), fix the `SELECTORS` at the top of `lib/adapters/<platform>.ts`, and rebuild.
+Use "copy rich text" to paste manually into the platform editor. Then run the adapter self-check on that page and update the corresponding selectors.
+
+### Why does this README say v2 while `package.json` says `1.0.0`?
+
+v2 refers to the current feature/documentation iteration, not an npm package release. This project is a personal Chrome extension source repository rather than a published npm package.
 
 ---
 
