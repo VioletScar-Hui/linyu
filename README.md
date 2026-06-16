@@ -149,6 +149,8 @@ linyu/
   wxt.config.ts             # WXT 配置(manifest、权限、图标)
   eslint.config.js          # ESLint 扁平配置
   .github/workflows/ci.yml  # CI:push/PR 自动 lint + test + build
+  public/                   # WXT 静态资源(应用图标)
+  showcase/                 # Linyu 案例展示站(独立 Astro 项目)
   assets/                   # README 图文介绍图片
   README.md / README.en.md / LICENSE
 ```
@@ -167,6 +169,14 @@ npm run icons      # 重新生成应用图标
 ```
 
 提交到 `main` 或任意 PR 会触发 GitHub Actions（`.github/workflows/ci.yml`）自动跑 `lint → test → build`，任一失败即拦住。
+
+`showcase/` 是一个独立的 Astro 案例展示站（与插件源码并存于仓库），有自己的依赖，可单独运行：
+
+```powershell
+cd showcase
+npm install
+npm run dev
+```
 
 ---
 

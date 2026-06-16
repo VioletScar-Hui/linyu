@@ -149,6 +149,8 @@ linyu/
   wxt.config.ts             # WXT config (manifest, permissions, icons)
   eslint.config.js          # ESLint flat config
   .github/workflows/ci.yml  # CI: lint + test + build on push/PR
+  public/                   # WXT static assets (app icons)
+  showcase/                 # Linyu case-study showcase site (standalone Astro project)
   assets/                   # README visuals
   README.md / README.en.md / LICENSE
 ```
@@ -167,6 +169,14 @@ npm run icons      # regenerate app icons
 ```
 
 Pushing to `main` or opening any PR triggers GitHub Actions (`.github/workflows/ci.yml`) to run `lint → test → build`; any failure blocks the change.
+
+`showcase/` is a standalone Astro case-study site (living alongside the extension source) with its own dependencies; run it separately:
+
+```powershell
+cd showcase
+npm install
+npm run dev
+```
 
 ---
 
