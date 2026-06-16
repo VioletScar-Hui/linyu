@@ -45,7 +45,7 @@ Drafts, images, and settings live in browser local storage. Runtime history, bui
 - **Image workflow**: drag-and-drop import, screenshot paste, caret-position insertion, cover marking, preview reordering, crop, rotate, flip, and compression.
 - **Platform variants**: separate copy for Xiaohongshu, X, and Reddit, with manual edits before dispatch.
 - **Pre-publish inspection**: platform-level checks for title, body, images, cover, length, and missing variants.
-- **History and backup**: auto-save tasks, search/delete/duplicate history, and full JSON export/import.
+- **History and backup**: auto-save tasks, search/delete/duplicate history, full JSON export/import, and single-article export as Markdown (zip with images, ready for Typora/Obsidian).
 - **Maintenance tools**: adapter self-check helps locate broken selectors when platforms change their editors.
 - **Engineering**: WXT + React + TypeScript, Vitest, ESLint, and GitHub Actions for lint/test/build.
 - **Showcase site**: `showcase/` contains a standalone Astro case-study site for personal portfolio use.

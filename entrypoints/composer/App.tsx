@@ -3,6 +3,7 @@ import { deriveTitle, renderHtml, moveImageBlock, insertImageRef } from '../../l
 import { extractImageRefs, matchImages } from '../../lib/images';
 import { stripMarkdown } from '../../lib/xhs';
 import { copyRichText } from '../../lib/clipboard';
+import { buildArticleZip } from '../../lib/export-md';
 import { newTask, saveTask, getTask, migrateIfNeeded, type Task, type TaskImage } from '../../lib/tasks';
 import { getSettings, type Settings } from '../../lib/settings';
 import { T, btn, BrandHeader, Card, SectionTitle, LingyuMark } from '../../lib/ui';
@@ -207,6 +208,19 @@ export function App({ initial }: { initial?: Task } = {}) {
     flash('富文本已复制,可粘贴到任意编辑器');
   };
 
+  const exportMarkdown = async () => {
+    const t = latestTask.current;
+    const blob = await buildArticleZip(t);
+    const name = (t.title || 'article').replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+    flash('已导出 Markdown(含图片)压缩包');
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: T.paper, fontFamily: T.fontSans }}>
       <header style={{
@@ -286,6 +300,7 @@ export function App({ initial }: { initial?: Task } = {}) {
             <PlatformBar task={task} mpAccounts={settings.mpAccounts} enabled={enabledSet} onBeforeFill={save} />
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
               <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
+              <button type="button" style={btn.ghost()} onClick={() => void exportMarkdown()}>导出 Markdown</button>
               <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
               {savedAt && (
                 <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: T.textFaint }}>
