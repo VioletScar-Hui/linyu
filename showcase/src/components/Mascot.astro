@@ -1,0 +1,97 @@
+---
+/**
+ * 吉祥物占位组件。
+ *  - 传 `src`（例如 "/assets/linyu-pose1.png"）即用你的真实立绘，自动替换占位图。
+ *  - 不传则渲染同色系 chibi 占位 SVG，方便先上线。
+ */
+interface Props {
+  src?: string;
+  alt?: string;
+  size?: number;
+  flip?: boolean;
+  class?: string;
+}
+const { src, alt = 'Linyu mascot', size = 220, flip = false, class: className = '' } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 8);
+const wrapStyle = `width:${size}px;${flip ? 'transform:scaleX(-1);' : ''}`;
+---
+
+{src ? (
+  <img class={`mascot ${className}`} src={src} alt={alt} style={wrapStyle} loading="lazy" />
+) : (
+  <div class={`mascot mascot--ph ${className}`} style={wrapStyle} role="img" aria-label={`${alt}（占位图，可替换）`}>
+    <svg viewBox="0 0 200 270" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={`hair-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#e7e1fb" />
+          <stop offset="1" stop-color="#cfc4f3" />
+        </linearGradient>
+        <linearGradient id={`dress-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3b3552" />
+          <stop offset="1" stop-color="#2a2540" />
+        </linearGradient>
+      </defs>
+
+      <!-- ground shadow -->
+      <ellipse cx="100" cy="256" rx="54" ry="9" fill="#4a3a26" opacity="0.10" />
+
+      <!-- back hair -->
+      <path d="M44 110c0-34 25-60 56-60s56 26 56 60c0 40-6 78-18 96-8-8-14-10-22-10-10 0-12 4-16 4s-6-4-16-4c-8 0-14 2-22 10-12-18-18-56-18-96Z" fill={`url(#hair-${uid})`} />
+
+      <!-- legs + striped socks -->
+      <g>
+        <rect x="82" y="196" width="14" height="44" rx="7" fill="#f3eefc" />
+        <rect x="104" y="196" width="14" height="44" rx="7" fill="#f3eefc" />
+        <rect x="82" y="206" width="14" height="5" fill="#b9aef0" />
+        <rect x="104" y="206" width="14" height="5" fill="#b9aef0" />
+        <rect x="82" y="218" width="14" height="5" fill="#b9aef0" />
+        <rect x="104" y="218" width="14" height="5" fill="#b9aef0" />
+        <!-- boots -->
+        <rect x="78" y="236" width="20" height="16" rx="6" fill="#ffffff" stroke="#d7cef0" stroke-width="1.5" />
+        <rect x="102" y="236" width="20" height="16" rx="6" fill="#ffffff" stroke="#d7cef0" stroke-width="1.5" />
+      </g>
+
+      <!-- dress -->
+      <path d="M72 150c6-8 16-12 28-12s22 4 28 12l10 52c-12 8-26 11-38 11s-26-3-38-11Z" fill={`url(#dress-${uid})`} />
+      <path d="M88 150c0 6 5 10 12 10s12-4 12-10" fill="none" stroke="#8b7cf6" stroke-width="2.4" stroke-linecap="round" />
+      <circle cx="100" cy="170" r="3" fill="#8b7cf6" />
+
+      <!-- pointing arm -->
+      <path d="M128 158c12 2 24 0 33-6" fill="none" stroke="#3b3552" stroke-width="11" stroke-linecap="round" />
+      <circle cx="163" cy="150" r="6.5" fill="#fbe7d8" />
+
+      <!-- head -->
+      <circle cx="100" cy="98" r="40" fill="#fbe7d8" />
+
+      <!-- front bangs -->
+      <path d="M60 96c-2-30 18-50 40-50s42 20 40 50c-6-14-14-18-22-18-4 6-8 8-10 8-3 0-5-3-8-8-10 0-15 6-18 14-6-2-14 0-22 2Z" fill={`url(#hair-${uid})`} />
+      <path d="M62 92c4 10 4 26 2 40 8-6 10-22 9-34Z" fill={`url(#hair-${uid})`} />
+      <path d="M138 92c-4 10-4 26-2 40-8-6-10-22-9-34Z" fill={`url(#hair-${uid})`} />
+
+      <!-- face -->
+      <ellipse cx="86" cy="104" rx="4.6" ry="6" fill="#3f6fd0" />
+      <ellipse cx="114" cy="104" rx="4.6" ry="6" fill="#3f6fd0" />
+      <circle cx="87.6" cy="102" r="1.5" fill="#fff" />
+      <circle cx="115.6" cy="102" r="1.5" fill="#fff" />
+      <ellipse cx="78" cy="113" rx="5" ry="3" fill="#f6b8b0" opacity="0.6" />
+      <ellipse cx="122" cy="113" rx="5" ry="3" fill="#f6b8b0" opacity="0.6" />
+      <path d="M94 114c3 3 9 3 12 0" fill="none" stroke="#c98477" stroke-width="2" stroke-linecap="round" />
+
+      <!-- cat-ear headphones -->
+      <path d="M64 64l-6-24 26 12Z" fill="#332e49" />
+      <path d="M67 60l-3-13 13 7Z" fill="#8b7cf6" />
+      <path d="M136 64l6-24-26 12Z" fill="#332e49" />
+      <path d="M133 60l3-13-13 7Z" fill="#8b7cf6" />
+      <rect x="52" y="92" width="13" height="22" rx="6" fill="#332e49" />
+      <rect x="135" y="92" width="13" height="22" rx="6" fill="#332e49" />
+      <path d="M58 92a42 42 0 0 1 84 0" fill="none" stroke="#332e49" stroke-width="5" />
+    </svg>
+  </div>
+)}
+
+<style>
+  .mascot { display: block; height: auto; }
+  /* 真实立绘（img）保留柔和投影；SVG 占位自带地面阴影，无需 filter */
+  img.mascot { filter: drop-shadow(0 10px 18px rgba(74, 58, 38, 0.16)); }
+  .mascot--ph { position: relative; }
+</style>

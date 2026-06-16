@@ -1,0 +1,169 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Icon from '../components/Icon.astro';
+import Mascot from '../components/Mascot.astro';
+import ExtensionPopup from '../components/ExtensionPopup.astro';
+import BrowserMockup from '../components/BrowserMockup.astro';
+import { linyu, otherProjects } from '../data/project';
+
+const featBullets = ['Multi-platform publishing', 'AI-assisted content workflow', 'Markdown-first experience'];
+const miniIcon: Record<string, { name: string; tone: string }> = {
+  green: { name: 'layers', tone: 'mini--green' },
+  amber: { name: 'copy', tone: 'mini--amber' },
+  purple: { name: 'sparkles', tone: 'mini--purple' },
+};
+const featTags = ['Chrome Extension', 'React', 'Content Workflow', 'TypeScript'];
+---
+
+<Base title="Projects — Linyu 灵羽 & more">
+  <Nav active="Home" />
+
+  <main class="container projects" id="projects">
+    <!-- section header -->
+    <div class="projects__head">
+      <div>
+        <h1 class="projects__title display">Projects</h1>
+        <p class="projects__sub">Selected work with a focus on AI, workflows, and product experience.</p>
+        <span class="projects__rule"></span>
+      </div>
+      <a class="btn btn-ghost" href="#"><Icon name="layers" size={16} /> View All Projects <Icon name="chevron" size={15} /></a>
+    </div>
+
+    <div class="projects__grid">
+      <!-- ===== Featured: Linyu ===== -->
+      <article class="feat">
+        <a class="feat__hit" href="/projects/linyu" aria-label="View Linyu case study"></a>
+        <span class="feat__badge"><Icon name="sparkles" size={14} /> Featured</span>
+
+        <div class="feat__body">
+          <div class="feat__copy">
+            <div class="feat__brand">
+              <span class="feat__logo"><Icon name="feather" size={24} /></span>
+              <div>
+                <h2 class="display">Linyu <span class="cjk">灵羽</span></h2>
+                <p>{linyu.tagline}</p>
+              </div>
+            </div>
+            <ul class="feat__bullets">
+              {featBullets.map((b) => <li><Icon name="check" size={15} /> {b}</li>)}
+            </ul>
+            <div class="feat__tags">
+              {featTags.map((t) => <span class="tag">{t}</span>)}
+            </div>
+          </div>
+
+          <div class="feat__visual">
+            <BrowserMockup class="feat__browser" />
+            <ExtensionPopup width={232} class="feat__popup" />
+            <Mascot size={150} class="feat__mascot" />
+          </div>
+        </div>
+
+        <div class="feat__foot">
+          <a class="btn btn-primary feat__btn" href="/projects/linyu">View Case Study <Icon name="arrow" size={16} /></a>
+          <a class="btn btn-ghost feat__btn" href={linyu.links.sourceCode}><Icon name="github" size={16} /> GitHub</a>
+        </div>
+      </article>
+
+      <!-- ===== Other projects ===== -->
+      <div class="side-projects">
+        {otherProjects.map((p, i) => {
+          const ic = miniIcon[p.accent];
+          return (
+            <a class={`mini ${i === 0 ? 'mini--lead' : ''}`} href="#">
+              <div class="mini__top">
+                <span class={`mini__icon ${ic.tone}`}><Icon name={ic.name} size={20} /></span>
+                <div class="mini__viz" data-k={p.accent}><i></i><i></i><i></i></div>
+              </div>
+              <h3>{p.name}</h3>
+              <p>{p.text}</p>
+              <div class="mini__tags">{p.tags.map((t) => <span class="tag">{t}</span>)}</div>
+              <span class="mini__cta">View Case Study <Icon name="arrow" size={15} /></span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+
+    <p class="projects__more"><Icon name="sparkles" size={16} /> More projects coming soon…</p>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .projects { padding-top: 44px; }
+  .projects__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 34px; }
+  .projects__title { font-size: clamp(44px, 6vw, 72px); line-height: 1; }
+  .projects__sub { color: var(--ink-2); font-size: 17px; margin-top: 12px; max-width: 48ch; }
+  .projects__rule { display: block; width: 56px; height: 4px; border-radius: 3px; background: var(--accent); margin-top: 16px; }
+
+  .projects__grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 22px; align-items: start; }
+
+  /* —— featured —— */
+  .feat { position: relative; background: var(--card); border: 1.5px solid var(--border-soft); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); overflow: hidden; }
+  .feat::before { content: ''; position: absolute; inset: 0; background: radial-gradient(420px 220px at 78% 8%, #fbf3e8, transparent 70%); pointer-events: none; }
+  .feat__hit { position: absolute; inset: 0; z-index: 1; }
+  .feat__badge { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; font-size: 13px; font-weight: 700; color: var(--accent); box-shadow: var(--shadow-sm); }
+  .feat__badge :global(svg) { color: var(--amber); }
+
+  .feat__body { position: relative; display: grid; grid-template-columns: 0.85fr 1fr; gap: 20px; margin-top: 18px; align-items: center; }
+  .feat__brand { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .feat__logo { width: 50px; height: 50px; flex: none; display: grid; place-items: center; background: var(--purple-soft); color: var(--purple-strong); border-radius: 14px; }
+  .feat__brand h2 { font-size: 30px; line-height: 1; }
+  .feat__brand h2 .cjk { font-weight: 700; }
+  .feat__brand p { color: var(--ink-3); font-size: 14px; margin-top: 4px; }
+  .feat__bullets { display: grid; gap: 10px; margin-bottom: 18px; }
+  .feat__bullets li { display: flex; align-items: center; gap: 9px; color: var(--ink-2); font-size: 14.5px; }
+  .feat__bullets :global(svg) { color: var(--green); flex: none; }
+  .feat__tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .feat__visual { position: relative; height: 290px; }
+  .feat__browser { position: absolute; right: -10px; top: 6px; width: 92%; }
+  .feat__popup { position: absolute; left: 0; top: 30px; z-index: 2; }
+  .feat__mascot { position: absolute; right: -6px; bottom: -18px; z-index: 3; }
+
+  .feat__foot { position: relative; z-index: 2; display: flex; gap: 12px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border-soft); }
+  .feat__btn { position: relative; z-index: 2; }
+
+  /* —— side mini cards —— */
+  .side-projects { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .mini { grid-column: span 1; background: var(--card); border: 1.5px solid var(--border-soft); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; display: flex; flex-direction: column; }
+  .mini--lead { grid-column: 1 / -1; }
+  .mini:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+  .mini__top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .mini__icon { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px; }
+  .mini--green { background: var(--green-soft); color: #357a4a; }
+  .mini--amber { background: var(--amber-soft); color: #a06a18; }
+  .mini--purple { background: var(--purple-soft); color: var(--purple-strong); }
+  .mini__viz { flex: 1; display: grid; gap: 5px; align-content: center; background: var(--card-sunken); border-radius: 9px; padding: 10px; min-height: 44px; }
+  .mini__viz i { height: 6px; border-radius: 3px; background: #e3d8c4; }
+  .mini__viz i:nth-child(2) { width: 75%; }
+  .mini__viz i:nth-child(3) { width: 55%; }
+  .mini__viz[data-k="green"] i:first-child { background: var(--green); width: 40%; }
+  .mini--lead .mini__viz { min-height: 70px; }
+  .mini h3 { font-size: 19px; margin-bottom: 5px; }
+  .mini p { color: var(--ink-2); font-size: 14px; margin-bottom: 14px; }
+  .mini__tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .mini__tags .tag { font-size: 12px; padding: 4px 10px; }
+  .mini__cta { margin-top: auto; display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font-weight: 700; font-size: 14px; }
+
+  .projects__more { display: flex; align-items: center; justify-content: center; gap: 9px; color: var(--ink-3); margin-top: 34px; font-size: 15px; }
+  .projects__more :global(svg) { color: var(--amber); }
+
+  @media (max-width: 980px) {
+    .projects__grid { grid-template-columns: 1fr; }
+    .feat__body { grid-template-columns: 1fr; }
+    .feat__visual { height: 300px; margin-top: 8px; }
+  }
+  @media (max-width: 600px) {
+    .projects__head { flex-direction: column; }
+    .side-projects { grid-template-columns: 1fr; }
+    .mini--lead { grid-column: auto; }
+    .feat__foot { flex-direction: column; }
+    .feat__btn { width: 100%; justify-content: center; }
+    .feat__visual { height: 250px; }
+  }
+</style>

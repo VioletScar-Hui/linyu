@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+---
+
+<Base title="Card States — Linyu 灵羽">
+  <Nav active="Projects" />
+
+  <main class="container states">
+    <header class="states__head">
+      <p class="eyebrow">Component</p>
+      <h1 class="display states__title">Project Card · States</h1>
+      <p class="lede">The entry card you drop into your personal site's projects grid — shown in its three interaction states.</p>
+    </header>
+
+    <div class="states__row">
+      <div class="states__col">
+        <span class="states__chip">Default</span>
+        <ProjectCard />
+      </div>
+      <div class="states__col states__col--hl">
+        <span class="states__chip is-hl">Hover</span>
+        <ProjectCard forceHover />
+      </div>
+      <div class="states__col">
+        <span class="states__chip">Mobile</span>
+        <ProjectCard mobile />
+      </div>
+    </div>
+
+    <p class="states__note">
+      Hover lifts the card, deepens the shadow, switches the border to the brand accent and reveals the round
+      action button. The mobile variant narrows the layout and shrinks the mockup.
+    </p>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .states { padding-top: 40px; }
+  .states__head { max-width: 60ch; margin-bottom: 38px; }
+  .states__title { font-size: clamp(34px, 5vw, 52px); margin: 8px 0 14px; }
+
+  .states__row { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; justify-content: center; }
+  .states__col { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .states__col--hl { padding: 8px; }
+
+  .states__chip { font-size: 13px; font-weight: 700; color: var(--ink-2); background: var(--card-sunken); border: 1px solid var(--border-soft); border-radius: 999px; padding: 6px 16px; }
+  .states__chip.is-hl { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+
+  .states__note { max-width: 64ch; margin: 40px auto 0; text-align: center; color: var(--ink-2); font-size: 15px; }
+</style>

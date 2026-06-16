@@ -1,0 +1,183 @@
+/* ============================================================
+   Linyu 灵羽 · Showcase — Design tokens & base styles
+   暖米色 + 赭石橙 + 紫色扩展 UI
+   ============================================================ */
+
+:root {
+  /* —— surfaces —— */
+  --bg: #f6eee2;
+  --bg-2: #f1e6d6;
+  --bg-grad-top: #f8f1e7;
+  --card: #ffffff;
+  --card-soft: #fcf8f1;
+  --card-sunken: #f7efe2;
+
+  /* —— ink / text —— */
+  --ink: #2a2118;
+  --ink-2: #5c5246;
+  --ink-3: #8a7e6e;
+
+  /* —— brand accents —— */
+  --accent: #c75a2e;        /* 赭石橙 — 主按钮 / 链接 */
+  --accent-strong: #af4a22;
+  --accent-soft: #f6e2d2;
+  --purple: #7c6cf0;        /* 扩展 UI 主色 */
+  --purple-strong: #6a55ea;
+  --purple-soft: #ece8fc;
+
+  /* —— status —— */
+  --green: #4d9c63;
+  --green-soft: #e4f1e7;
+  --amber: #c98a2c;
+  --amber-soft: #f8ecd5;
+  --blue: #5184d6;
+  --blue-soft: #e4ecf9;
+
+  /* —— lines & shadows —— */
+  --border: #e9dcc6;
+  --border-soft: #f0e7d8;
+  --ring: rgba(199, 90, 46, 0.35);
+  --shadow-sm: 0 1px 2px rgba(74, 58, 38, 0.06), 0 2px 6px rgba(74, 58, 38, 0.05);
+  --shadow-md: 0 6px 18px rgba(74, 58, 38, 0.08), 0 2px 6px rgba(74, 58, 38, 0.05);
+  --shadow-lg: 0 18px 50px rgba(74, 58, 38, 0.14), 0 6px 16px rgba(74, 58, 38, 0.08);
+
+  /* —— type —— */
+  --font-display: 'Playfair Display', 'Noto Serif SC', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+
+  /* —— layout —— */
+  --maxw: 1180px;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-lg: 26px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 520px at 78% -8%, #fbf4ea 0%, rgba(251, 244, 234, 0) 60%),
+    linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg) 22%, var(--bg) 100%);
+  background-repeat: no-repeat;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; color: var(--ink); font-weight: 700; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+/* —— layout helpers —— */
+.container { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: 24px; }
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(26px, 3.4vw, 38px);
+  color: var(--accent);
+}
+
+.lede { color: var(--ink-2); font-size: 17px; max-width: 56ch; }
+
+/* —— buttons —— */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease,
+    border-color 0.16s ease, color 0.16s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--accent-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.btn-ghost { background: var(--card); color: var(--ink); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+.btn-purple {
+  background: linear-gradient(180deg, #8b7cf6, var(--purple-strong));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(108, 85, 234, 0.32);
+}
+.btn-purple:hover { filter: brightness(1.04); transform: translateY(-1px); }
+
+/* —— tags / pills —— */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--card-sunken);
+  color: var(--ink-2);
+  border: 1px solid var(--border-soft);
+}
+.tag.is-purple { background: var(--purple-soft); color: #5d4fd0; border-color: transparent; }
+.tag.is-green  { background: var(--green-soft); color: #357a4a; border-color: transparent; }
+.tag.is-blue   { background: var(--blue-soft); color: #3d6cc0; border-color: transparent; }
+.tag.is-amber  { background: var(--amber-soft); color: #a06a18; border-color: transparent; }
+
+/* —— status badge —— */
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.badge.ready { background: var(--green-soft); color: #357a4a; }
+.badge.draft { background: var(--amber-soft); color: #a06a18; }
+
+/* —— generic card —— */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+/* —— focus visibility for a11y —— */
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* —— motion preference —— */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

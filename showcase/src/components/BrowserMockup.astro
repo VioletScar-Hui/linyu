@@ -1,0 +1,98 @@
+---
+import Icon from './Icon.astro';
+
+interface Props { class?: string; }
+const { class: className = '' } = Astro.props;
+
+const tools = ['bold', 'italic', 'list', 'quote', 'code', 'link', 'image', 'undo', 'redo', 'more'];
+---
+
+<div class={`browser ${className}`}>
+  <div class="browser__chrome">
+    <div class="browser__lights">
+      <span style="background:#ec6a5e"></span>
+      <span style="background:#f4be4f"></span>
+      <span style="background:#61c454"></span>
+    </div>
+    <div class="browser__navbtns">
+      <Icon name="chevron" size={15} class="flip" />
+      <Icon name="chevron" size={15} />
+    </div>
+    <div class="browser__url">
+      <Icon name="feather" size={13} />
+      <span></span>
+    </div>
+    <div class="browser__ext">
+      <span class="browser__puzzle"></span>
+      <Icon name="more" size={16} />
+    </div>
+  </div>
+
+  <div class="browser__page">
+    <div class="browser__title">Add title</div>
+    <div class="browser__toolbar">
+      {tools.map((t) => <span class="browser__tool"><Icon name={t} size={15} /></span>)}
+    </div>
+    <div class="browser__lines">
+      <i style="width:92%"></i>
+      <i style="width:78%"></i>
+      <i style="width:85%"></i>
+      <i style="width:64%"></i>
+      <div class="browser__imgph"><Icon name="image" size={26} /></div>
+      <i style="width:88%"></i>
+      <i style="width:72%"></i>
+      <i style="width:80%"></i>
+    </div>
+  </div>
+</div>
+
+<style>
+  .browser {
+    background: #fff;
+    border: 1px solid #e7ddca;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    width: 100%;
+  }
+  .browser__chrome {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; background: #f7f1e7; border-bottom: 1px solid #eee3d2;
+  }
+  .browser__lights { display: flex; gap: 6px; }
+  .browser__lights span { width: 11px; height: 11px; border-radius: 50%; }
+  .browser__navbtns { display: flex; gap: 4px; color: #b6a98f; }
+  .browser__navbtns :global(.flip) { transform: rotate(180deg); }
+  .browser__url {
+    flex: 1; display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #eadfca; border-radius: 9px;
+    padding: 7px 12px; color: var(--purple);
+  }
+  .browser__url span { flex: 1; height: 6px; border-radius: 3px; background: #efe6d5; }
+  .browser__ext { display: flex; align-items: center; gap: 9px; color: #b6a98f; }
+  .browser__puzzle { width: 15px; height: 15px; border-radius: 4px; background: #e6dcc8; }
+
+  .browser__page { padding: 22px 26px 26px; }
+  .browser__title {
+    font-family: var(--font-display); font-size: 22px; font-weight: 700;
+    color: #cbbfa9; margin-bottom: 16px;
+  }
+  .browser__toolbar {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding: 7px; background: #faf5ec; border: 1px solid #efe6d5;
+    border-radius: 10px; margin-bottom: 20px; color: var(--ink-3);
+  }
+  .browser__tool {
+    width: 28px; height: 28px; display: grid; place-items: center;
+    border-radius: 7px;
+  }
+  .browser__tool:hover { background: #efe6d5; color: var(--ink-2); }
+
+  .browser__lines { display: grid; gap: 13px; }
+  .browser__lines i { height: 9px; border-radius: 5px; background: #eee4d2; display: block; }
+  .browser__imgph {
+    height: 120px; border-radius: 12px; background: #f4ecdc;
+    border: 1px dashed #ddd0b8; display: grid; place-items: center; color: #c9bca2;
+    margin: 6px 0;
+  }
+</style>

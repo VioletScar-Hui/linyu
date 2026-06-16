@@ -1,0 +1,128 @@
+---
+import Icon from './Icon.astro';
+import Mascot from './Mascot.astro';
+import ExtensionPopup from './ExtensionPopup.astro';
+import { linyu } from '../data/project';
+
+interface Props {
+  href?: string;
+  forceHover?: boolean;
+  mobile?: boolean;
+  class?: string;
+}
+const { href = '/projects/linyu', forceHover = false, mobile = false, class: className = '' } = Astro.props;
+
+const tagTone = ['is-purple', 'is-green', 'is-blue', ''];
+const mascotSrc = undefined; // 换成 "/assets/linyu-point.png" 即用真实立绘
+---
+
+<article class={`pcard ${forceHover ? 'is-hover' : ''} ${mobile ? 'is-mobile' : ''} ${className}`}>
+  <a class="pcard__hit" href={href} aria-label={`View ${linyu.name} case study`}></a>
+
+  <header class="pcard__head">
+    <span class="pcard__logo"><Icon name="feather" size={20} /></span>
+    <div class="pcard__titles">
+      <h3 class="display">{linyu.name} <span class="cjk">{linyu.nameCn}</span></h3>
+      <p>{linyu.tagline}</p>
+    </div>
+    <a class="pcard__gh" href={linyu.links.sourceCode} aria-label="GitHub repository"><Icon name="github" size={20} /></a>
+  </header>
+
+  <div class="pcard__stage">
+    <Mascot src={mascotSrc} size={mobile ? 96 : 124} class="pcard__mascot" />
+    <ExtensionPopup width={mobile ? 168 : 196} showClose={true} class="pcard__popup" />
+  </div>
+
+  <div class="pcard__tags">
+    {linyu.cardTags.map((t, i) => <span class={`tag ${tagTone[i] ?? ''}`}>{t}</span>)}
+  </div>
+
+  <div class="pcard__foot">
+    <span class="pcard__cta">View Case Study <Icon name="arrow" size={16} class="pcard__arrow" /></span>
+    <span class="pcard__arrowbtn"><Icon name="arrow" size={18} /></span>
+  </div>
+</article>
+
+<style>
+  .pcard {
+    position: relative;
+    background: var(--card);
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    width: 360px;
+    max-width: 100%;
+  }
+  .pcard.is-mobile { width: 300px; padding: 18px; }
+
+  .pcard__hit { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+
+  .pcard__head { display: flex; align-items: center; gap: 13px; position: relative; }
+  .pcard__logo {
+    width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+    background: var(--purple-soft); color: var(--purple-strong);
+    border-radius: 13px; transition: box-shadow 0.22s ease;
+  }
+  .pcard__titles { flex: 1; min-width: 0; }
+  .pcard__titles h3 { font-size: 23px; line-height: 1.1; }
+  .pcard__titles h3 .cjk { font-family: var(--font-display); font-weight: 700; }
+  .pcard__titles p { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+  .pcard__gh {
+    width: 38px; height: 38px; flex: none; display: grid; place-items: center;
+    color: var(--ink); background: var(--card-soft); border: 1px solid var(--border-soft);
+    border-radius: 50%; position: relative; z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+  .pcard__gh:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+  .pcard__stage {
+    position: relative; height: 256px; margin: 18px 0 16px;
+    display: flex; justify-content: flex-end; align-items: flex-start;
+  }
+  .is-mobile .pcard__stage { height: 230px; }
+  .pcard__popup { position: relative; z-index: 1; }
+  .pcard__mascot {
+    position: absolute; left: -6px; bottom: -6px; z-index: 2;
+    pointer-events: none;
+  }
+
+  .pcard__tags { display: flex; flex-wrap: wrap; gap: 8px; position: relative; }
+
+  .pcard__foot {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft);
+    position: relative;
+  }
+  .pcard__cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; color: var(--accent); font-size: 15px;
+  }
+  .pcard__arrow { transition: transform 0.2s ease; }
+  .pcard__arrowbtn {
+    width: 40px; height: 40px; display: grid; place-items: center;
+    background: var(--accent); color: #fff; border-radius: 50%;
+    opacity: 0; transform: scale(0.6) translateX(-8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* —— hover / forced-hover state —— */
+  .pcard:hover, .pcard.is-hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+  .pcard:hover .pcard__logo, .pcard.is-hover .pcard__logo {
+    box-shadow: 0 0 0 4px rgba(124, 108, 240, 0.16);
+  }
+  .pcard:hover .pcard__cta .pcard__arrow, .pcard.is-hover .pcard__cta .pcard__arrow {
+    transform: translateX(3px);
+  }
+  .pcard:hover .pcard__arrowbtn, .pcard.is-hover .pcard__arrowbtn {
+    opacity: 1; transform: scale(1) translateX(0);
+  }
+  /* 默认态隐藏圆形箭头按钮的占位，hover 才浮现 */
+  .pcard__arrowbtn { margin-left: auto; }
+</style>

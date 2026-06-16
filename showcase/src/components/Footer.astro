@@ -1,0 +1,24 @@
+---
+import Icon from './Icon.astro';
+---
+
+<footer class="foot">
+  <div class="container foot__inner">
+    <span class="foot__mark"><Icon name="feather" size={15} /></span>
+    <span>Built by one developer</span>
+    <i></i>
+    <span>Open source</span>
+    <i></i>
+    <span>Local-first by default</span>
+  </div>
+</footer>
+
+<style>
+  .foot { border-top: 1px solid var(--border-soft); margin-top: 72px; padding: 28px 0; }
+  .foot__inner {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 12px; color: var(--ink-3); font-size: 14px;
+  }
+  .foot__mark { color: var(--purple); display: inline-grid; place-items: center; }
+  .foot__inner i { width: 4px; height: 4px; border-radius: 50%; background: #d6c9b2; }
+</style>

@@ -1,0 +1,138 @@
+---
+import Icon from './Icon.astro';
+import { popup } from '../data/project';
+
+interface Props {
+  width?: number;
+  showClose?: boolean;
+  class?: string;
+}
+const { width = 290, showClose = true, class: className = '' } = Astro.props;
+---
+
+<div class={`epopup ${className}`} style={`width:${width}px`}>
+  <header class="epopup__bar">
+    <div class="epopup__brand">
+      <span class="epopup__logo"><Icon name="feather" size={14} /></span>
+      <strong>Linyu</strong>
+    </div>
+    <div class="epopup__actions">
+      <Icon name="settings" size={15} />
+      <Icon name="pin" size={15} />
+      {showClose && <Icon name="x" size={15} />}
+    </div>
+  </header>
+
+  <div class="epopup__body">
+    <div class="epopup__row-label">
+      <span>Queue</span><i class="epopup__count">{popup.queue.length}</i>
+    </div>
+    <ul class="epopup__queue">
+      {popup.queue.map((q) => (
+        <li>
+          <Icon name="notes" size={14} class="epopup__file" />
+          <span class="epopup__name">{q.name}</span>
+          <span class={`badge ${q.status}`}>{q.status === 'ready' ? 'Ready' : 'Draft'}</span>
+          <Icon name="chevron" size={13} class="epopup__chev" />
+        </li>
+      ))}
+    </ul>
+
+    <div class="epopup__row-label">
+      <span>Local Images</span><i class="epopup__count">{popup.imagesCount}</i>
+    </div>
+    <div class="epopup__thumbs">
+      <span class="epopup__thumb t1"></span>
+      <span class="epopup__thumb t2"></span>
+      <span class="epopup__thumb t3"></span>
+      <span class="epopup__thumb epopup__thumb--more">+{popup.imagesCount - 4}</span>
+    </div>
+
+    <div class="epopup__row-label"><span>Platforms</span></div>
+    <div class="epopup__platforms">
+      {popup.platforms.map((p) => (
+        <span class="epopup__plat">
+          <Icon name={p.status === 'ready' ? 'checkCircle' : 'format'} size={13} />
+          <b>{p.name}</b>
+          <i class={`epopup__pstatus ${p.status}`}>{p.status === 'ready' ? 'Ready' : 'Draft'}</i>
+        </span>
+      ))}
+    </div>
+
+    <button class="btn btn-purple epopup__publish" type="button">
+      <Icon name="sparkles" size={15} /> Publish All
+    </button>
+  </div>
+</div>
+
+<style>
+  .epopup {
+    background: #fff;
+    border: 1px solid #ece3d3;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(58, 44, 28, 0.18), 0 6px 16px rgba(58, 44, 28, 0.08);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .epopup__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-bottom: 1px solid #f1eadc;
+  }
+  .epopup__brand { display: flex; align-items: center; gap: 8px; }
+  .epopup__brand strong { font-size: 15px; color: var(--ink); }
+  .epopup__logo {
+    width: 24px; height: 24px; display: grid; place-items: center;
+    background: var(--purple-soft); color: var(--purple-strong); border-radius: 7px;
+  }
+  .epopup__actions { display: flex; align-items: center; gap: 9px; color: var(--ink-3); }
+
+  .epopup__body { padding: 12px 14px 14px; }
+  .epopup__row-label {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; color: var(--ink-2); font-size: 12.5px;
+    margin: 12px 2px 8px;
+  }
+  .epopup__row-label:first-child { margin-top: 2px; }
+  .epopup__count {
+    font-style: normal; font-size: 11px; font-weight: 700;
+    background: var(--card-sunken); color: var(--ink-3);
+    padding: 1px 8px; border-radius: 999px;
+  }
+
+  .epopup__queue { display: grid; gap: 7px; }
+  .epopup__queue li {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card-soft); border: 1px solid var(--border-soft);
+    border-radius: 9px; padding: 8px 9px;
+  }
+  .epopup__file { color: var(--ink-3); flex: none; }
+  .epopup__name { flex: 1; color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .epopup__chev { color: #cbbfad; flex: none; }
+
+  .epopup__thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .epopup__thumb { aspect-ratio: 1; border-radius: 9px; border: 1px solid var(--border-soft); }
+  .t1 { background: linear-gradient(135deg, #efe6d6, #d9cbb3); }
+  .t2 { background: linear-gradient(135deg, #efe2e0, #d8c2bd); }
+  .t3 { background: linear-gradient(135deg, #dfe7d8, #c2d2b6); }
+  .epopup__thumb--more {
+    display: grid; place-items: center; font-weight: 700; color: var(--ink-3);
+    background: var(--card-sunken);
+  }
+
+  .epopup__platforms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .epopup__plat {
+    display: grid; justify-items: center; gap: 3px;
+    background: var(--card-soft); border: 1px solid var(--border-soft);
+    border-radius: 9px; padding: 9px 4px; text-align: center;
+  }
+  .epopup__plat :global(svg) { color: var(--green); }
+  .epopup__plat b { font-size: 12.5px; color: var(--ink); }
+  .epopup__pstatus { font-style: normal; font-size: 10.5px; font-weight: 700; }
+  .epopup__pstatus.ready { color: #357a4a; }
+  .epopup__pstatus.draft { color: #a06a18; }
+
+  .epopup__publish { width: 100%; justify-content: center; margin-top: 13px; padding: 11px; }
+</style>
