@@ -134,6 +134,18 @@ Platforms change their pages over time. If filling fails, use "copy rich text" a
 
 ---
 
+## What's Been Built
+
+- **Platform coverage**: grew from 4 (WeChat / Zhihu / Xiaohongshu / Woshipm) to **7 auto-fill platforms** (+ Bilibili / X / Reddit, all selectors verified on the real sites), plus 7 quick-jump platforms (Weibo / Jianshu / Juejin / CSDN / Toutiao / Douban / Medium).
+- **Linyu visuals**: ink-teal / gold / paper palette, feather mark, app icons; unified Popup and composer redesign.
+- **Image tooling**: in-extension crop / rotate / flip / quality compression; insert images at the caret; click an image in the preview to move up / down / edit; paste screenshots with Ctrl+V; full-screen split editing.
+- **Variants & dispatch**: short-form variants for Xiaohongshu / X / Reddit; one-click batch fill across platforms; WeChat multi-account direct jump + login-state reminder; WeChat cover auto "select from body".
+- **Quality & speed**: pre-publish inspection (length / format / missing image / missing variant); auto-save drafts; one-click snippet insertion; history search / delete / duplicate.
+- **Data & maintenance**: per-task storage + lightweight index (stays fast as it grows) with automatic migration; full export / import backup; per-platform enable in settings; popup self-check to locate broken selectors.
+- **Engineering**: ESLint + GitHub Actions CI (lint + test + build on push/PR) + composer visual preview.
+
+---
+
 ## Repository Structure
 
 ```text
