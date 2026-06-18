@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { extname, join } from 'path';
 
 const dir = new URL('.', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
 
 createServer(async (req, res) => {
   const p = req.url === '/' ? '/index.html' : req.url.split('?')[0];

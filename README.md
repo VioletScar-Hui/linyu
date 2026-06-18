@@ -1,15 +1,15 @@
-# 灵羽 · 多平台分发助手 v2
+# 灵羽 · 多平台分发助手 v3
 
 [中文](README.md) | [English](README.en.md)
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-111827)
-![Version](https://img.shields.io/badge/Version-v2-8B5CF6)
+![Version](https://img.shields.io/badge/Version-v3-8B5CF6)
 ![Platforms](https://img.shields.io/badge/Auto--fill-7%20platforms-00B96B)
 ![Stack](https://img.shields.io/badge/WXT%20%2B%20React%20%2B%20TypeScript-111827)
 ![License](https://img.shields.io/github/license/VioletScar-Hui/linyu)
 
-`linyu` 是一个 Chrome Manifest V3 插件，面向需要把同一篇 Markdown 长文和本地配图分发到多个内容平台的创作者。v2 把“撰写、配图、短文案变体、发布前检查、跳转填充、历史管理、备份恢复”整合到一个本地优先的半自动发布工作流里。
+`linyu` 是一个 Chrome Manifest V3 插件，面向需要把同一篇 Markdown 长文和本地配图分发到多个内容平台的创作者。v3 在 v2 的基础上把撰写区升级为**飞书式所见即所得编辑器**（底层仍是 Markdown），并加入图片自动压缩、粘贴图自动入库、保存快捷键，整体串成一个本地优先的半自动发布工作流：撰写、配图、短文案变体、发布前检查、跳转填充、历史管理、备份恢复。
 
 灵羽不会调用平台私有发布 API，也不会替你点击最终发布按钮。它负责打开目标平台编辑器并尽量填充标题、正文、图片或短文案，最终发布仍由你在平台页面人工确认。
 
@@ -37,12 +37,22 @@
 
 ---
 
-## v2 重点
+## v3 重点
+
+### 本轮 v3 新增
+
+- **飞书式所见即所得编辑器**：撰写区由 Markdown 文本框升级为基于 Milkdown Crepe 的 WYSIWYG 编辑器，像写 Word/飞书文档一样编辑，底层仍以 Markdown 存储，下游变体/体检/导出/适配器逻辑完全不变。编辑器即预览，撰写台改为单主区布局。
+- **粘贴图自动入库**：在编辑器里粘贴或拖入的图片会自动抽进图片库并转成 `filename` 引用，避免把大 `dataUrl` 写进正文。
+- **图片自动压缩**：入库时超过 1920px 的图按长边等比缩小，JPEG/WebP 按质量重编码，仅当结果更小才替换（GIF/SVG 原样保留）。
+- **保存快捷键**：`Ctrl/Cmd + S` 保存当前任务，并拦截浏览器默认的“保存网页”对话框。
+- **工程拆分**：撰写台的状态、副作用与动作抽到 `useComposer` Hook，`App.tsx` 回归为纯视图组装。
+
+### 沿用能力
 
 - **7 个自动填充平台**：微信公众号、知乎专栏、小红书、B 站专栏、人人都是产品经理、X、Reddit。
 - **7 个快捷跳转平台**：微博头条文章、简书、掘金、CSDN、今日头条、豆瓣、Medium，可在设置里按需启用。
-- **撰写台升级**：Markdown 编辑、HTML 预览、全屏分屏、常用片段、一键复制富文本。
-- **图片工作流**：拖入图片、截图粘贴入库、按光标插图、封面标记、预览中移动图片、裁剪/旋转/翻转/压缩。
+- **撰写台**：所见即所得编辑、常用片段、一键复制富文本、导入 `.md`。
+- **图片工作流**：拖入图片、粘贴入库、从图片库一键插入正文、封面标记、裁剪/旋转/翻转/压缩。
 - **平台变体**：为小红书、X、Reddit 生成独立标题或正文变体，并允许发布前手动调整。
 - **发布前体检**：按平台检查标题、正文、图片、封面、字数和缺失变体，给出红/黄/绿状态。
 - **历史与备份**：任务自动保存，历史列表支持搜索、删除、复制为新任务；设置页支持全量导出/导入；单篇文章可导出为 Markdown（含图片 zip 包，可直接拖进 Typora/Obsidian）。
@@ -95,13 +105,14 @@ chrome://extensions
 ## 第一次运行
 
 1. 点击浏览器工具栏中的灵羽图标。
-2. 新建分发任务，输入标题，粘贴 Markdown 正文。
-3. 拖入本地图片，或在正文编辑区用 `Ctrl+V` 粘贴截图。
-4. 需要时把图片插入到正文光标处，或在图片库中设置封面、裁剪、旋转、压缩。
+2. 新建分发任务，输入标题，在所见即所得编辑器里撰写正文（支持 Markdown 语法、导入 `.md`）。
+3. 拖入本地图片（自动压缩入库），或直接在编辑器里粘贴/拖入截图（自动入库并转为 `filename` 引用）。
+4. 从图片库一键把图片插入正文末尾，或设置封面、裁剪、旋转、压缩。
 5. 在变体面板生成或编辑小红书、X、Reddit 文案。
 6. 查看发布前体检，确认没有阻断项。
-7. 在平台栏选择目标平台并发起填充。
-8. 到平台页面人工检查，最后手动发布。
+7. 用 `Ctrl/Cmd + S` 随时保存（也会自动保存草稿）。
+8. 在平台栏选择目标平台并发起填充。
+9. 到平台页面人工检查，最后手动发布。
 
 ---
 
@@ -130,12 +141,12 @@ chrome://extensions
 ## 数据与隐私
 
 - 任务正文、图片、平台状态和设置存储在浏览器 `storage.local`。
-- v2 使用 `task:{id}` + `taskIndex` 的拆分存储，历史列表只读取轻量索引，避免每次加载都读入全部图片。
+- 使用 `task:{id}` + `taskIndex` 的拆分存储，历史列表只读取轻量索引，避免每次加载都读入全部图片。
 - 最多保留最近 20 个任务，超出后自动清理旧任务。
 - 支持导出/导入包含任务和设置的 JSON 备份。
 - 不保存账号密码、Cookie 或平台登录凭据。
 - 不上传浏览器历史，不提交运行期任务历史。
-- `.gitignore` 排除了 `node_modules/`、`.wxt/`、`.output/`、`preview/out.js`。
+- `.gitignore` 排除了 `node_modules/`、`.wxt/`、`.output/`、`preview/out.js`、`preview/out.css`。
 
 默认 Chrome 用户数据通常位于系统用户目录下，插件的运行期本地数据由浏览器管理；仓库中的源码、构建产物和浏览器本地历史是两回事。
 
@@ -185,7 +196,7 @@ npm run dev
 ```text
 linyu/
   entrypoints/              # WXT 入口：popup、composer、content scripts、background
-  entrypoints/composer/     # 撰写台：历史、图片、变体、预检、设置、预览
+  entrypoints/composer/     # 撰写台：所见即所得编辑器、历史、图片、变体、预检、设置
   lib/                      # Markdown、图片、任务、设置、备份、预检等纯逻辑
   lib/adapters/             # 各平台 SELECTORS、填充逻辑和自检逻辑
   preview/                  # 撰写台可视化预览服务
@@ -215,9 +226,9 @@ linyu/
 
 先使用“复制富文本”兜底，把内容手动粘贴到平台编辑器。之后在该平台页面打开灵羽 popup，运行当前页面适配器自检，根据结果更新对应适配器的选择器。
 
-### 为什么 README 里写 v2，`package.json` 还是 `1.0.0`？
+### 为什么 README 里写 v3，`package.json` 还是 `1.0.0`？
 
-这里的 v2 指当前功能迭代版本和 README 展示版本，不等同于 npm 包发布版本。本项目是私有/个人插件源码仓库，尚未作为公开 npm 包发布。
+这里的 v3 指当前功能迭代版本和 README 展示版本，不等同于 npm 包发布版本。本项目是私有/个人插件源码仓库，尚未作为公开 npm 包发布。
 
 ---
 

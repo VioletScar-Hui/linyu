@@ -1,15 +1,15 @@
-# Linyu · Multi-Platform Publishing Assistant v2
+# Linyu · Multi-Platform Publishing Assistant v3
 
 [中文](README.md) | [English](README.en.md)
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-111827)
-![Version](https://img.shields.io/badge/Version-v2-8B5CF6)
+![Version](https://img.shields.io/badge/Version-v3-8B5CF6)
 ![Auto-fill](https://img.shields.io/badge/Auto--fill-7%20platforms-00B96B)
 ![Stack](https://img.shields.io/badge/WXT%20%2B%20React%20%2B%20TypeScript-111827)
 ![License](https://img.shields.io/github/license/VioletScar-Hui/linyu)
 
-`linyu` is a Chrome Manifest V3 extension for creators who publish the same Markdown article and local images across multiple content platforms. v2 brings writing, image handling, short-form variants, pre-publish checks, editor filling, history management, and backup/restore into one local-first semi-automated workflow.
+`linyu` is a Chrome Manifest V3 extension for creators who publish the same Markdown article and local images across multiple content platforms. v3 upgrades the writing area to a **Feishu/Notion-style WYSIWYG editor** (still Markdown underneath) and adds automatic image compression, pasted-image auto-ingest, and a save shortcut. It brings writing, image handling, short-form variants, pre-publish checks, editor filling, history management, and backup/restore into one local-first semi-automated workflow.
 
 Linyu does not call private publishing APIs and does not click the final publish button. It opens the target platform editor and fills the title, body, images, or short-form copy where possible. The final review and publish action stay with the user.
 
@@ -37,12 +37,22 @@ Drafts, images, and settings live in browser local storage. Runtime history, bui
 
 ---
 
-## v2 Highlights
+## v3 Highlights
+
+### New in v3
+
+- **Feishu-style WYSIWYG editor**: the writing area moves from a Markdown textarea to a Milkdown Crepe WYSIWYG editor — edit like a Word/Feishu document while Markdown stays the storage layer, so variants/preflight/export/adapters are unchanged. The editor is the preview, and the composer is now a single main column.
+- **Pasted-image auto-ingest**: images pasted or dropped into the editor are automatically added to the gallery and rewritten to `filename` references, avoiding large `dataUrl` blobs in the body.
+- **Automatic image compression**: on import, images larger than 1920px are scaled down by the long edge and JPEG/WebP are re-encoded by quality, replaced only when smaller (GIF/SVG kept as-is).
+- **Save shortcut**: `Ctrl/Cmd + S` saves the current task and intercepts the browser's default "save page" dialog.
+- **Refactor**: composer state, side effects, and actions are extracted into a `useComposer` hook, leaving `App.tsx` as a thin view.
+
+### Carried over
 
 - **7 auto-fill platforms**: WeChat Official Account, Zhihu Column, Xiaohongshu, Bilibili Column, Woshipm, X, and Reddit.
 - **7 quick-jump platforms**: Weibo article, Jianshu, Juejin, CSDN, Toutiao, Douban, and Medium, configurable in settings.
-- **Composer upgrade**: Markdown editing, HTML preview, full-screen split mode, reusable snippets, and one-click rich-text copy.
-- **Image workflow**: drag-and-drop import, screenshot paste, caret-position insertion, cover marking, preview reordering, crop, rotate, flip, and compression.
+- **Composer**: WYSIWYG editing, reusable snippets, one-click rich-text copy, and `.md` import.
+- **Image workflow**: drag-and-drop import, paste-to-ingest, one-click insert from the gallery, cover marking, crop, rotate, flip, and compression.
 - **Platform variants**: separate copy for Xiaohongshu, X, and Reddit, with manual edits before dispatch.
 - **Pre-publish inspection**: platform-level checks for title, body, images, cover, length, and missing variants.
 - **History and backup**: auto-save tasks, search/delete/duplicate history, full JSON export/import, and single-article export as Markdown (zip with images, ready for Typora/Obsidian).
@@ -95,13 +105,14 @@ After editing source code, run `npm run build` again and reload the extension on
 ## First Run
 
 1. Click the Linyu icon in the browser toolbar.
-2. Create a distribution task, enter a title, and paste the Markdown body.
-3. Drag in local images, or paste screenshots into the editor with `Ctrl+V`.
-4. Insert images at the caret position when needed, or use the image gallery to set a cover, crop, rotate, or compress.
+2. Create a distribution task, enter a title, and write the body in the WYSIWYG editor (Markdown syntax and `.md` import supported).
+3. Drag in local images (auto-compressed), or paste/drop screenshots directly into the editor (auto-ingested and rewritten to `filename` references).
+4. Insert an image from the gallery to the end of the body, or set a cover, crop, rotate, or compress it.
 5. Generate or edit variants for Xiaohongshu, X, and Reddit.
 6. Review the pre-publish inspection panel.
-7. Select target platforms and dispatch filling.
-8. Review the native platform editor manually, then publish yourself.
+7. Save anytime with `Ctrl/Cmd + S` (drafts also auto-save).
+8. Select target platforms and dispatch filling.
+9. Review the native platform editor manually, then publish yourself.
 
 ---
 
@@ -130,12 +141,12 @@ Platform pages change over time. If filling fails, use "copy rich text" as a man
 ## Data and Privacy
 
 - Task bodies, images, platform status, and settings are stored in browser `storage.local`.
-- v2 stores tasks as `task:{id}` plus a lightweight `taskIndex`, so the history list does not load every image every time.
+- Tasks are stored as `task:{id}` plus a lightweight `taskIndex`, so the history list does not load every image every time.
 - The extension keeps up to 20 recent tasks and prunes older ones.
 - JSON export/import backs up tasks and settings.
 - No credentials, cookies, or login tokens are stored.
 - Browser history is not uploaded, and runtime task history is not committed.
-- `.gitignore` excludes `node_modules/`, `.wxt/`, `.output/`, and `preview/out.js`.
+- `.gitignore` excludes `node_modules/`, `.wxt/`, `.output/`, `preview/out.js`, and `preview/out.css`.
 
 Chrome usually stores extension runtime data inside the user's browser profile. Repository source code, build output, and browser-local task history are separate things.
 
@@ -185,7 +196,7 @@ For Vercel, Netlify, or Cloudflare Pages, set the root directory to `showcase`, 
 ```text
 linyu/
   entrypoints/              # WXT entries: popup, composer, content scripts, background
-  entrypoints/composer/     # Composer UI: history, images, variants, preflight, settings, preview
+  entrypoints/composer/     # Composer UI: WYSIWYG editor, history, images, variants, preflight, settings
   lib/                      # Markdown, images, tasks, settings, backup, preflight logic
   lib/adapters/             # Platform SELECTORS, filling logic, and self-checks
   preview/                  # Composer visual preview server
@@ -215,9 +226,9 @@ No. Task history lives in browser-local `storage.local`; the repository only sto
 
 Use "copy rich text" to paste manually into the platform editor. Then run the adapter self-check on that page and update the corresponding selectors.
 
-### Why does this README say v2 while `package.json` says `1.0.0`?
+### Why does this README say v3 while `package.json` says `1.0.0`?
 
-v2 refers to the current feature/documentation iteration, not an npm package release. This project is a personal Chrome extension source repository rather than a published npm package.
+v3 refers to the current feature/documentation iteration, not an npm package release. This project is a personal Chrome extension source repository rather than a published npm package.
 
 ---
 
