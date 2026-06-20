@@ -9,7 +9,7 @@
     "postinstall": "wxt prepare",
     "icons": "node scripts/gen-icons.mjs",
     "lint": "eslint .",
-    "preview:build": "esbuild preview/main.tsx --bundle --outfile=preview/out.js --jsx=automatic --alias:wxt/browser=./preview/browser-stub.ts --loader:.css=css --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.svg=dataurl --loader:.png=dataurl",
+    "preview:build": "esbuild preview/main.tsx --bundle --outfile=preview/out.js --jsx=automatic --alias:wxt/browser=./preview/browser-stub.ts --alias:@anthropic-ai/sdk=./preview/anthropic-stub.ts --loader:.css=css --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.svg=dataurl --loader:.png=dataurl",
     "preview": "npm run preview:build && node preview/server.mjs"
   },
   "keywords": [],
@@ -18,6 +18,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "@milkdown/crepe": "^7.21.2",
     "@wxt-dev/module-react": "^1.2.2",
     "jszip": "^3.10.1",

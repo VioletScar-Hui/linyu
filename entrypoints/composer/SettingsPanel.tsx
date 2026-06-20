@@ -3,14 +3,44 @@ import { PLATFORMS, type PlatformId } from '../../lib/platforms';
 import { T, btn, PLATFORM_COLORS } from '../../lib/ui';
 import {
   newMpAccount, newSnippet, saveSettings,
-  type MpAccount, type Snippet, type Settings,
+  type MpAccount, type Snippet, type Settings, type AiFeatureId, type AiFeatureConfig,
 } from '../../lib/settings';
 import { exportBackup, importBackup } from '../../lib/backup';
+import { AI_PROVIDERS, AI_FEATURES, listModels } from '../../lib/ai';
+import { DEFAULT_PROVIDER, getProvider } from '../../lib/ai-providers';
 
 const field: React.CSSProperties = {
   border: `1px solid ${T.border}`, borderRadius: T.radiusSm, padding: '8px 11px',
   fontSize: 13, fontFamily: T.fontSans, color: T.text, background: T.card, boxSizing: 'border-box',
 };
+
+/** 模型选择:真 select(总是列出全部候选)+「自定义…」逃生口(给聚合站/自建网关填任意 id)。
+ *  外层按 provider 设 key,切服务商时整体重挂、custom 态自动复位。 */
+function ModelPicker({ value, options, defaultModel, width = 156, onChange }: {
+  value: string; options: string[]; defaultModel: string; width?: number; onChange: (v: string) => void;
+}) {
+  const inList = options.includes(value);
+  const [custom, setCustom] = useState(!!value && !inList);
+  const selectVal = custom ? '__custom__' : (inList ? value : '');
+  return (
+    <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+      <select style={{ ...field, width: custom ? 96 : width, cursor: 'pointer' }} value={selectVal}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === '__custom__') { setCustom(true); onChange(''); }
+          else { setCustom(false); onChange(v); }
+        }}>
+        <option value="">默认{defaultModel ? `(${defaultModel})` : '(需选)'}</option>
+        {options.map((m) => <option key={m} value={m}>{m}</option>)}
+        <option value="__custom__">自定义…</option>
+      </select>
+      {custom && (
+        <input style={{ ...field, width: 130 }} placeholder="模型 id" value={value}
+          onChange={(e) => onChange(e.target.value)} />
+      )}
+    </span>
+  );
+}
 
 /** 设置面板:公众号多账号 + 常用片段管理 */
 export function SettingsPanel({ settings, onSaved, onClose }: {
@@ -21,6 +51,30 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
   const [accounts, setAccounts] = useState<MpAccount[]>(settings.mpAccounts);
   const [snippets, setSnippets] = useState<Snippet[]>(settings.snippets);
   const [enabled, setEnabled] = useState<Set<PlatformId>>(new Set(settings.enabledPlatforms));
+  const [aiProvider, setAiProvider] = useState(settings.aiProvider || DEFAULT_PROVIDER);
+  const [aiBaseURL, setAiBaseURL] = useState(settings.aiBaseURL ?? '');
+  const [aiApiKey, setAiApiKey] = useState(settings.aiApiKey ?? '');
+  const [aiModel, setAiModel] = useState(settings.aiModel ?? '');
+  const [aiFeatures, setAiFeatures] = useState<Partial<Record<AiFeatureId, AiFeatureConfig>>>(settings.aiFeatures ?? {});
+  const [fetchedModels, setFetchedModels] = useState<Record<string, string[]>>({});
+  const [modelLoading, setModelLoading] = useState(false);
+  const [modelErr, setModelErr] = useState<string | null>(null);
+  const upFeature = (id: AiFeatureId, patch: Partial<AiFeatureConfig>) =>
+    setAiFeatures((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  const modelOptions = (provider: string) =>
+    [...new Set([...getProvider(provider).models, ...(fetchedModels[provider] ?? [])])];
+  const pullModels = async () => {
+    setModelLoading(true);
+    setModelErr(null);
+    try {
+      const ids = await listModels(aiProvider, aiBaseURL || getProvider(aiProvider).baseURL, aiApiKey);
+      setFetchedModels((m) => ({ ...m, [aiProvider]: ids }));
+    } catch (e) {
+      setModelErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setModelLoading(false);
+    }
+  };
 
   const upAcc = (id: string, patch: Partial<MpAccount>) =>
     setAccounts((l) => l.map((a) => (a.id === id ? { ...a, ...patch } : a)));
@@ -59,6 +113,19 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
       mpAccounts: accounts.filter((a) => a.name.trim() || a.token.trim()),
       snippets: snippets.filter((s) => s.name.trim() || s.content.trim()),
       enabledPlatforms: PLATFORMS.filter((p) => enabled.has(p.id)).map((p) => p.id),
+      aiProvider,
+      aiBaseURL: aiBaseURL.trim(),
+      aiApiKey: aiApiKey.trim(),
+      aiModel: aiModel.trim(),
+      aiFeatures: AI_FEATURES.reduce<Partial<Record<AiFeatureId, AiFeatureConfig>>>((acc, f) => {
+        const c = aiFeatures[f.id];
+        const provider = c?.provider ?? '';
+        const baseURL = c?.baseURL?.trim() ?? '';
+        const apiKey = c?.apiKey?.trim() ?? '';
+        const model = c?.model?.trim() ?? '';
+        if (provider || baseURL || apiKey || model) acc[f.id] = { provider, baseURL, apiKey, model };
+        return acc;
+      }, {}),
     };
     await saveSettings(next);
     onSaved(next);
@@ -139,6 +206,67 @@ export function SettingsPanel({ settings, onSaved, onClose }: {
           </div>
           <button type="button" onClick={() => setSnippets((l) => [...l, newSnippet()])}
             style={{ ...btn.ghost(), marginTop: 10 }}>＋ 添加片段</button>
+
+          <div style={{ ...sectionH, marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>AI 助手(自带 API Key)</div>
+          <div style={{ fontSize: 12, color: T.textSoft, lineHeight: 1.7, background: T.goldFaint + '88', border: `1px solid ${T.gold}55`, borderRadius: T.radiusSm, padding: '10px 12px', marginBottom: 12 }}>
+            支持 Claude、Kimi、DeepSeek、GLM、MiniMax 官方,以及 OpenRouter / AiHubMix 聚合。填入对应服务商的 API Key 即可用 AI 生成变体、起标题、推荐话题、做语义体检。
+            <strong> Key 仅存本地</strong>,不上传;仅在你<strong>主动点 AI 功能</strong>时把相关正文发往所选服务商。
+            可对每个功能单独设置服务商/Key/模型,<strong>留空则用全局默认</strong>。
+          </div>
+
+          <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 6 }}>全局默认</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' }}>
+            <select style={{ ...field, width: 150, flexShrink: 0, cursor: 'pointer' }}
+              value={aiProvider} onChange={(e) => {
+                const np = e.target.value;
+                setAiProvider(np);
+                setAiBaseURL(''); // 旧服务商的代理地址不应带到新服务商
+                setAiModel(''); // 清空:留旧值会过滤掉新候选,填默认又只剩一个匹配;空值时下拉显示该家全部模型,调用时回退默认
+              }}>
+              {AI_PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+            </select>
+            <input style={{ ...field, flex: 1, minWidth: 160 }} placeholder={`API 地址,默认 ${getProvider(aiProvider).baseURL || '(官方)'}`}
+              value={aiBaseURL} onChange={(e) => setAiBaseURL(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' }}>
+            <input type="password" style={{ ...field, flex: 1, minWidth: 160 }} placeholder={`API Key(${getProvider(aiProvider).keyHint})`}
+              value={aiApiKey} onChange={(e) => setAiApiKey(e.target.value)} autoComplete="off" />
+            <ModelPicker key={`gm-${aiProvider}`} value={aiModel} options={modelOptions(aiProvider)}
+              defaultModel={getProvider(aiProvider).defaultModel} onChange={setAiModel} />
+            <button type="button" onClick={() => void pullModels()} disabled={modelLoading}
+              style={{ ...btn.ghost(), padding: '7px 12px', fontSize: 12, opacity: modelLoading ? 0.6 : 1 }}>
+              {modelLoading ? '拉取中…' : '拉取模型'}
+            </button>
+          </div>
+          {modelErr && <div style={{ fontSize: 12, color: T.err, marginBottom: 8 }}>拉取失败:{modelErr}</div>}
+          <div style={{ height: 10 }} />
+
+          <div style={{ fontSize: 12, color: T.textFaint, marginBottom: 6 }}>分功能覆盖(留空跟随全局)</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {AI_FEATURES.map((f) => {
+              const fc = aiFeatures[f.id];
+              const eff = fc?.provider || aiProvider;
+              return (
+                <div key={f.id} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ width: 84, flexShrink: 0, fontSize: 12, color: T.textSoft }}>{f.label}</span>
+                  <select style={{ ...field, width: 116, flexShrink: 0, cursor: 'pointer' }}
+                    value={fc?.provider ?? ''} onChange={(e) => {
+                      // 切服务商时清空该功能的地址与模型(空值下拉显示新家全部候选,调用时回退默认)
+                      upFeature(f.id, { provider: e.target.value, baseURL: '', model: '' });
+                    }}>
+                    <option value="">跟随全局</option>
+                    {AI_PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
+                  <input style={{ ...field, width: 150, flexShrink: 0 }} placeholder="API 地址(默认)"
+                    value={fc?.baseURL ?? ''} onChange={(e) => upFeature(f.id, { baseURL: e.target.value })} />
+                  <input type="password" style={{ ...field, flex: 1, minWidth: 90 }} placeholder="留空用全局 Key"
+                    value={fc?.apiKey ?? ''} onChange={(e) => upFeature(f.id, { apiKey: e.target.value })} autoComplete="off" />
+                  <ModelPicker key={`fm-${f.id}-${eff}`} value={fc?.model ?? ''} options={modelOptions(eff)}
+                    defaultModel={getProvider(eff).defaultModel} width={130} onChange={(v) => upFeature(f.id, { model: v })} />
+                </div>
+              );
+            })}
+          </div>
 
           <div style={{ ...sectionH, marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>数据备份</div>
           <div style={{ fontSize: 12, color: T.textSoft, marginBottom: 12 }}>

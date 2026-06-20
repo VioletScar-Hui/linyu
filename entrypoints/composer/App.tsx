@@ -8,6 +8,9 @@ import { History } from './History';
 import { ImageGallery } from './ImageGallery';
 import { SettingsPanel } from './SettingsPanel';
 import { Preflight } from './Preflight';
+import { AiTitleButton } from './AiTitleButton';
+import { AiReview } from './AiReview';
+import { aiEnabled } from '../../lib/ai';
 import { useComposer } from './useComposer';
 
 const field: React.CSSProperties = {
@@ -54,6 +57,10 @@ export function App({ initial }: { initial?: Task } = {}) {
           <SectionTitle n="1" title="文章" extra={
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 12, color: T.textFaint }}>{[...task.markdown].length} 字</span>
+              {aiEnabled(settings, 'titles') && (
+                <AiTitleButton settings={settings} title={task.title} markdown={task.markdown}
+                  onPick={(title) => setTask((t) => ({ ...t, title }))} />
+              )}
               <label style={{ ...btn.ghost(), display: 'inline-block', fontSize: 12, padding: '5px 12px' }}>
                 导入 .md
                 <input type="file" accept=".md,text/markdown" style={{ display: 'none' }}
@@ -94,13 +101,18 @@ export function App({ initial }: { initial?: Task } = {}) {
           <SectionTitle n="3" title="平台文案变体" extra={
             <span style={{ fontSize: 12, color: T.textFaint }}>长文平台用正文,这里写短文案</span>
           } />
-          <VariantTabs task={task} onChange={(key, v) => setTask((t) => ({ ...t, variants: { ...t.variants, [key]: v } }))} />
+          <VariantTabs task={task} settings={settings} onChange={(key, v) => setTask((t) => ({ ...t, variants: { ...t.variants, [key]: v } }))} />
         </Card>
 
         <Card>
           <SectionTitle n="4" title="分发到平台" />
           <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
             <Preflight task={task} missing={match.missing} enabled={enabledSet} />
+            {aiEnabled(settings, 'review') && (
+              <div style={{ marginTop: 12 }}>
+                <AiReview settings={settings} task={task} enabled={enabledSet} />
+              </div>
+            )}
           </div>
           <PlatformBar task={task} mpAccounts={settings.mpAccounts} enabled={enabledSet} onBeforeFill={save} />
           <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>

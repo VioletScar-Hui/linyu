@@ -7,7 +7,7 @@ beforeEach(() => fakeBrowser.reset());
 
 describe('settings 存储', () => {
   it('默认空账号/片段,启用平台为默认 7 个', async () => {
-    expect(await getSettings()).toEqual({ mpAccounts: [], snippets: [], enabledPlatforms: DEFAULT_ENABLED });
+    expect(await getSettings()).toEqual({ mpAccounts: [], snippets: [], enabledPlatforms: DEFAULT_ENABLED, aiProvider: '', aiBaseURL: '', aiApiKey: '', aiModel: '', aiFeatures: {} });
   });
 
   it('保存后可取回账号、片段与启用平台', async () => {
