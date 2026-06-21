@@ -1,4 +1,4 @@
-# Linyu · Multi-Platform Publishing Assistant v3
+# Linyu · AI-Assisted Multi-Platform Publishing Assistant v3
 
 [中文](README.md) | [English](README.en.md)
 
@@ -6,59 +6,65 @@
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-111827)
 ![Version](https://img.shields.io/badge/Version-v3-8B5CF6)
 ![Auto-fill](https://img.shields.io/badge/Auto--fill-7%20platforms-00B96B)
+![AI](https://img.shields.io/badge/AI-BYOK%20multi--provider-B45309)
 ![Stack](https://img.shields.io/badge/WXT%20%2B%20React%20%2B%20TypeScript-111827)
 ![License](https://img.shields.io/github/license/VioletScar-Hui/linyu)
 
-`linyu` is a Chrome Manifest V3 extension for creators who publish the same Markdown article and local images across multiple content platforms. v3 upgrades the writing area to a **Feishu/Notion-style WYSIWYG editor** (still Markdown underneath) and adds automatic image compression, pasted-image auto-ingest, and a save shortcut. It brings writing, image handling, short-form variants, pre-publish checks, editor filling, history management, and backup/restore into one local-first semi-automated workflow.
+`linyu` is a Chrome Manifest V3 extension for creators who publish the same long-form article and local images across multiple content platforms. v3 builds on the v2 semi-automated distribution workflow with a **BYOK multi-provider AI assistant**, a **Feishu/Notion-style WYSIWYG editor**, automatic image compression, pasted-image ingestion, Markdown+image zip export, and a more stable two-column composer.
 
-Linyu does not call private publishing APIs and does not click the final publish button. It opens the target platform editor and fills the title, body, images, or short-form copy where possible. The final review and publish action stay with the user.
+Linyu is not a fully automatic publishing bot. It assists writing, generates platform variants, runs pre-publish checks, opens target platform editors, and fills content where possible. The final publish action stays with the user on the platform page.
 
 ---
 
 ## Visual Introduction
 
-### 1. Write Once, Distribute Across Platforms
+### 1. AI-Assisted Writing, Semi-Automated Distribution
 
-![Linyu multi-platform overview](assets/intro-01-overview.png)
+![Linyu v3 overview](assets/intro-01-overview.png)
 
-Create a task in the composer, paste a Markdown body, import local images, and prepare per-platform versions. Long-form platforms use the full article, while short-form platforms use generated or manually edited variants.
+Prepare the long article, images, platform variants, and pre-publish checks in the composer. AI can help generate titles, rewrite short-form variants, recommend tags, and run semantic review; Linyu then opens native editors and fills content for manual confirmation.
 
-### 2. Semi-Automated Filling, Human Confirmation
+### 2. WYSIWYG Editor + AI Workspace
 
-![Linyu semi-automated filling with human review](assets/intro-02-human-review.png)
+![Linyu v3 AI writing workflow](assets/intro-02-human-review.png)
 
-Linyu sends the content into native platform editors while keeping each platform's login, preview, review, and publish flow intact. It is designed for faster distribution without giving up manual quality control.
+v3 replaces the Markdown textarea with a Milkdown Crepe WYSIWYG editor while keeping Markdown as the storage layer. The right sidebar keeps images, variants, checks, dispatch actions, and AI tools visible while writing.
 
-### 3. Local-First, No Uploaded History
+### 3. Local-First and Transparent
 
-![Linyu local-first safe publishing](assets/intro-03-local-safety.png)
+![Linyu v3 local-first safety workflow](assets/intro-03-local-safety.png)
 
-Drafts, images, and settings live in browser local storage. Runtime history, build output, and debug caches are not committed to the repository. If auto-fill breaks, copy-as-rich-text is available as a fallback.
+Tasks, images, settings, and API keys stay in browser local storage. AI requests are sent only when you explicitly run a feature, and only to the provider you configure. Linyu stores no credentials, uploads no browser history, and does not call private publishing APIs.
 
 ---
 
 ## v3 Highlights
 
-### New in v3
+### AI Assistant
 
-- **Feishu-style WYSIWYG editor**: the writing area moves from a Markdown textarea to a Milkdown Crepe WYSIWYG editor — edit like a Word/Feishu document while Markdown stays the storage layer, so variants/preflight/export/adapters are unchanged. The editor is the preview, and the composer is now a single main column.
-- **Pasted-image auto-ingest**: images pasted or dropped into the editor are automatically added to the gallery and rewritten to `filename` references, avoiding large `dataUrl` blobs in the body.
-- **Automatic image compression**: on import, images larger than 1920px are scaled down by the long edge and JPEG/WebP are re-encoded by quality, replaced only when smaller (GIF/SVG kept as-is).
+- **BYOK multi-provider support**: Claude official, Kimi/Moonshot, DeepSeek, Zhipu GLM, MiniMax, OpenRouter, AiHubMix, and custom OpenAI-compatible endpoints.
+- **Global config + feature overrides**: set one default provider, base URL, API key, and model; or override provider/key/model per feature.
+- **Model fetching**: the settings panel can fetch model ids from providers while still allowing manual model input.
+- **Four AI features**: platform short-form variants, AI title/hooks, topic/tag recommendations, and semantic pre-publish review.
+- **Local key boundary**: keys live in `storage.local`; article content is sent only when the user explicitly triggers an AI feature.
+
+### Writing and Images
+
+- **WYSIWYG editor**: powered by Milkdown Crepe. It feels like editing a document while Markdown remains the source format for checks, export, and adapters.
+- **Two-column composer**: the main column holds title and body; the sidebar keeps image gallery, variants, preflight, dispatch, and settings close at hand.
+- **Pasted-image ingestion**: images pasted or dropped into the editor are added to the gallery and rewritten to `filename` references instead of embedding huge `dataUrl` blobs.
+- **Automatic image compression**: images over a 1920px long edge are scaled down; JPEG/WebP are re-encoded by quality and replaced only when smaller; GIF/SVG stay unchanged.
+- **Markdown zip export**: export a single article as `article.md + images/`, ready for Typora, Obsidian, or archiving.
 - **Save shortcut**: `Ctrl/Cmd + S` saves the current task and intercepts the browser's default "save page" dialog.
-- **Refactor**: composer state, side effects, and actions are extracted into a `useComposer` hook, leaving `App.tsx` as a thin view.
 
-### Carried over
+### Distribution and Maintenance
 
 - **7 auto-fill platforms**: WeChat Official Account, Zhihu Column, Xiaohongshu, Bilibili Column, Woshipm, X, and Reddit.
 - **7 quick-jump platforms**: Weibo article, Jianshu, Juejin, CSDN, Toutiao, Douban, and Medium, configurable in settings.
-- **Composer**: WYSIWYG editing, reusable snippets, one-click rich-text copy, and `.md` import.
-- **Image workflow**: drag-and-drop import, paste-to-ingest, one-click insert from the gallery, cover marking, crop, rotate, flip, and compression.
-- **Platform variants**: separate copy for Xiaohongshu, X, and Reddit, with manual edits before dispatch.
 - **Pre-publish inspection**: platform-level checks for title, body, images, cover, length, and missing variants.
-- **History and backup**: auto-save tasks, search/delete/duplicate history, full JSON export/import, and single-article export as Markdown (zip with images, ready for Typora/Obsidian).
-- **Maintenance tools**: adapter self-check helps locate broken selectors when platforms change their editors.
+- **History and backup**: auto-save tasks, search/delete/duplicate history, and full JSON export/import.
+- **Adapter self-check**: helps locate broken selectors when platforms change their editors.
 - **Engineering**: WXT + React + TypeScript, Vitest, ESLint, and GitHub Actions for lint/test/build.
-- **Showcase site**: `showcase/` contains a standalone Astro case-study site for personal portfolio use.
 
 ---
 
@@ -67,15 +73,16 @@ Drafts, images, and settings live in browser local storage. Runtime history, bui
 Good fit:
 
 - One long article needs to be published to several content platforms.
+- You want AI help for titles, short-form variants, tags, or publishing-risk review.
 - The Markdown body contains local images and should keep a basic layout.
-- Xiaohongshu, X, or Reddit need shorter versions derived from a long article.
 - You still want a human to review platform rules, images, title, and final rendering.
 
 Not a fit:
 
 - Bypassing platform review or auto-clicking final publish buttons.
 - Bulk publishing through private platform APIs.
-- Storing credentials, cookies, or platform login tokens.
+- Letting the extension manage credentials, cookies, or platform login tokens.
+- Avoiding third-party model calls when you explicitly trigger AI features.
 
 ---
 
@@ -105,12 +112,12 @@ After editing source code, run `npm run build` again and reload the extension on
 ## First Run
 
 1. Click the Linyu icon in the browser toolbar.
-2. Create a distribution task, enter a title, and write the body in the WYSIWYG editor (Markdown syntax and `.md` import supported).
-3. Drag in local images (auto-compressed), or paste/drop screenshots directly into the editor (auto-ingested and rewritten to `filename` references).
-4. Insert an image from the gallery to the end of the body, or set a cover, crop, rotate, or compress it.
-5. Generate or edit variants for Xiaohongshu, X, and Reddit.
+2. Create a distribution task, enter a title, and write the body in the WYSIWYG editor; `.md` import is supported.
+3. Drag in local images, or paste/drop screenshots into the editor; images are ingested and compressed when useful.
+4. Configure an AI provider and API key in settings; optionally set separate models for individual AI features.
+5. Use AI titles, Xiaohongshu/X/Reddit variants, tag recommendations, or semantic review.
 6. Review the pre-publish inspection panel.
-7. Save anytime with `Ctrl/Cmd + S` (drafts also auto-save).
+7. Save anytime with `Ctrl/Cmd + S`; drafts also auto-save.
 8. Select target platforms and dispatch filling.
 9. Review the native platform editor manually, then publish yourself.
 
@@ -138,14 +145,16 @@ Platform pages change over time. If filling fails, use "copy rich text" as a man
 
 ---
 
-## Data and Privacy
+## Data, Permissions, and Privacy
 
-- Task bodies, images, platform status, and settings are stored in browser `storage.local`.
+- Task bodies, images, platform status, settings, and API keys are stored in browser `storage.local`.
 - Tasks are stored as `task:{id}` plus a lightweight `taskIndex`, so the history list does not load every image every time.
 - The extension keeps up to 20 recent tasks and prunes older ones.
 - JSON export/import backs up tasks and settings.
-- No credentials, cookies, or login tokens are stored.
+- Single-article Markdown zip export is supported.
+- No credentials, cookies, or platform login tokens are stored.
 - Browser history is not uploaded, and runtime task history is not committed.
+- AI features need cross-origin requests to model providers or custom gateways, so the manifest uses `host_permissions: ["https://*/*"]`; if you only use fixed providers, narrow this in `wxt.config.ts`.
 - `.gitignore` excludes `node_modules/`, `.wxt/`, `.output/`, `preview/out.js`, and `preview/out.css`.
 
 Chrome usually stores extension runtime data inside the user's browser profile. Repository source code, build output, and browser-local task history are separate things.
@@ -196,8 +205,8 @@ For Vercel, Netlify, or Cloudflare Pages, set the root directory to `showcase`, 
 ```text
 linyu/
   entrypoints/              # WXT entries: popup, composer, content scripts, background
-  entrypoints/composer/     # Composer UI: WYSIWYG editor, history, images, variants, preflight, settings
-  lib/                      # Markdown, images, tasks, settings, backup, preflight logic
+  entrypoints/composer/     # Composer UI: WYSIWYG, AI, history, images, variants, preflight, settings
+  lib/                      # Markdown, images, compression, AI, tasks, settings, backup, preflight logic
   lib/adapters/             # Platform SELECTORS, filling logic, and self-checks
   preview/                  # Composer visual preview server
   public/                   # WXT static assets and extension icons
@@ -218,9 +227,13 @@ linyu/
 
 Login state, editor behavior, review rules, and publish confirmation differ by platform. Linyu only fills content and assists navigation; final publish is manually confirmed by the user.
 
-### Does Linyu upload my history to the repo or a server?
+### Does AI automatically read or upload my content?
 
-No. Task history lives in browser-local `storage.local`; the repository only stores source code. Build output, runtime caches, and local dependencies are excluded by `.gitignore`.
+No. AI runs only when you click title generation, variant generation, tag recommendations, or semantic review. That request sends the current title/body to the provider or custom gateway you configured.
+
+### Where are API keys stored?
+
+AI keys are stored in browser-local `storage.local` and are not committed to the repo. Different AI features can use different keys; a feature-level key is used only when that feature runs.
 
 ### What if auto-fill fails?
 
