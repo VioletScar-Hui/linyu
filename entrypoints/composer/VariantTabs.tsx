@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { T, btn, PLATFORM_COLORS } from '../../lib/ui';
 import { makeXhsVariant } from '../../lib/xhs';
 import { makeXVariant, makeRedditVariant } from '../../lib/social-variants';
-import { aiEnabled } from '../../lib/ai';
 import { aiGenerateVariant, aiRecommendTags } from '../../lib/ai-features';
 import type { Settings } from '../../lib/settings';
 import type { Task } from '../../lib/tasks';
@@ -40,8 +39,6 @@ export function VariantTabs({
   const v: Variant = task.variants[active] ?? { title: '', body: '' };
   const set = (patch: Partial<Variant>) => onChange(active, { ...v, ...patch });
   const switchTo = (key: Key) => { setActive(key); setTags([]); };
-  const canVariant = aiEnabled(settings, 'variant');
-  const canTags = aiEnabled(settings, 'tags');
 
   // 模板初稿(离线兜底)
   const gen = () => {
@@ -62,7 +59,7 @@ export function VariantTabs({
 
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
         {TABS.map((t) => {
           const on = active === t.key;
           const filled = !!(task.variants[t.key]?.title || task.variants[t.key]?.body);
@@ -79,18 +76,15 @@ export function VariantTabs({
             </button>
           );
         })}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          {canVariant && (
-            <button type="button" onClick={aiGen} disabled={loading}
-              style={{ ...btn.gold(), padding: '7px 14px', opacity: loading ? 0.6 : 1 }}>
-              {loading ? '生成中…' : '✨ AI 生成'}
-            </button>
-          )}
-          {canTags && (
-            <button type="button" onClick={aiTags} disabled={loading} style={btn.ghost()}>话题标签</button>
-          )}
-          <button type="button" onClick={gen} style={btn.ghost()}>从文章生成初稿</button>
-        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+        <span style={{ fontSize: 12, color: T.textFaint, marginRight: 2 }}>生成:</span>
+        <button type="button" onClick={aiGen} disabled={loading}
+          style={{ ...btn.gold(), padding: '7px 14px', opacity: loading ? 0.6 : 1 }}>
+          {loading ? '生成中…' : '✨ AI 生成'}
+        </button>
+        <button type="button" onClick={aiTags} disabled={loading} style={btn.ghost()}>话题标签</button>
+        <button type="button" onClick={gen} style={btn.ghost()}>从文章生成初稿</button>
       </div>
 
       {error && <div style={{ fontSize: 12, color: T.err, marginBottom: 10 }}>AI 失败:{error}</div>}

@@ -10,7 +10,6 @@ import { SettingsPanel } from './SettingsPanel';
 import { Preflight } from './Preflight';
 import { AiTitleButton } from './AiTitleButton';
 import { AiReview } from './AiReview';
-import { aiEnabled } from '../../lib/ai';
 import { useComposer } from './useComposer';
 
 const field: React.CSSProperties = {
@@ -46,86 +45,88 @@ export function App({ initial }: { initial?: Task } = {}) {
       </header>
 
       <div style={{
-        display: 'flex', flexDirection: 'column', gap: 20,
-        padding: 24, maxWidth: 920, margin: '0 auto',
+        display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) minmax(0, 1.5fr)', gap: 20,
+        padding: 24, maxWidth: 1340, margin: '0 auto', alignItems: 'start',
       }}>
-        <Card style={{ padding: '14px 18px' }}>
-          {ready && <History currentId={task.id} refreshKey={savedAt} onLoadId={(id) => void loadById(id)} />}
-        </Card>
+        {/* 左栏:配图 / 变体 / 分发 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+          <Card>
+            <SectionTitle n="2" title="配图与封面" extra={
+              <span style={{ fontSize: 12, color: T.textFaint }}>悬停缩略图可编辑 / 设封面 / 插入正文 / 删除</span>
+            } />
+            <ImageGallery
+              task={task} matchedSet={matchedSet} missing={match.missing}
+              onAddImages={(fs) => void addImages(fs)} onUpdateImage={updateImage}
+              onRemoveImage={removeImage} onSetCover={(f) => setTask((t) => ({ ...t, coverFilename: f }))}
+              onInsertImage={insertImage} />
+          </Card>
 
-        <Card>
-          <SectionTitle n="1" title="文章" extra={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, color: T.textFaint }}>{[...task.markdown].length} 字</span>
-              {aiEnabled(settings, 'titles') && (
-                <AiTitleButton settings={settings} title={task.title} markdown={task.markdown}
-                  onPick={(title) => setTask((t) => ({ ...t, title }))} />
-              )}
-              <label style={{ ...btn.ghost(), display: 'inline-block', fontSize: 12, padding: '5px 12px' }}>
-                导入 .md
-                <input type="file" accept=".md,text/markdown" style={{ display: 'none' }}
-                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void f.text().then((txt) => applyMarkdown(txt, { deriveTitle: true })).catch(console.error); }} />
-              </label>
-            </div>
-          } />
-          <input style={{ ...field, fontSize: 17, fontWeight: 500, marginBottom: 12 }}
-            placeholder="标题(自动取自第一个 # 标题,可改)"
-            value={task.title} onChange={(e) => setTask((t) => ({ ...t, title: e.target.value }))} />
-          <div style={{ border: `1px solid ${T.border}`, borderRadius: T.radiusSm, minHeight: 360, overflow: 'hidden', background: T.card }}>
-            <RichEditor value={task.markdown} images={task.images} onChange={onEditorChange}
-              onReady={(api) => { richApiRef.current = api; }} />
-          </div>
-          {settings.snippets.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 10 }}>
-              <span style={{ fontSize: 12, color: T.textFaint }}>插入片段:</span>
-              {settings.snippets.map((s) => (
-                <button key={s.id} type="button" onClick={() => insertSnippet(s.content)}
-                  style={{ ...btn.ghost(), padding: '4px 12px', fontSize: 12 }}>{s.name || '(未命名)'}</button>
-              ))}
-            </div>
-          )}
-        </Card>
+          <Card>
+            <SectionTitle n="3" title="平台文案变体" extra={
+              <span style={{ fontSize: 12, color: T.textFaint }}>长文平台用正文,这里写短文案</span>
+            } />
+            <VariantTabs task={task} settings={settings} onChange={(key, v) => setTask((t) => ({ ...t, variants: { ...t.variants, [key]: v } }))} />
+          </Card>
 
-        <Card>
-          <SectionTitle n="2" title="配图与封面" extra={
-            <span style={{ fontSize: 12, color: T.textFaint }}>悬停缩略图可编辑 / 设封面 / 插入正文 / 删除</span>
-          } />
-          <ImageGallery
-            task={task} matchedSet={matchedSet} missing={match.missing}
-            onAddImages={(fs) => void addImages(fs)} onUpdateImage={updateImage}
-            onRemoveImage={removeImage} onSetCover={(f) => setTask((t) => ({ ...t, coverFilename: f }))}
-            onInsertImage={insertImage} />
-        </Card>
-
-        <Card>
-          <SectionTitle n="3" title="平台文案变体" extra={
-            <span style={{ fontSize: 12, color: T.textFaint }}>长文平台用正文,这里写短文案</span>
-          } />
-          <VariantTabs task={task} settings={settings} onChange={(key, v) => setTask((t) => ({ ...t, variants: { ...t.variants, [key]: v } }))} />
-        </Card>
-
-        <Card>
-          <SectionTitle n="4" title="分发到平台" />
-          <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
-            <Preflight task={task} missing={match.missing} enabled={enabledSet} />
-            {aiEnabled(settings, 'review') && (
+          <Card>
+            <SectionTitle n="4" title="分发到平台" />
+            <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${T.borderSoft}` }}>
+              <Preflight task={task} missing={match.missing} enabled={enabledSet} />
               <div style={{ marginTop: 12 }}>
                 <AiReview settings={settings} task={task} enabled={enabledSet} />
               </div>
+            </div>
+            <PlatformBar task={task} mpAccounts={settings.mpAccounts} enabled={enabledSet} onBeforeFill={save} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
+              <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
+              <button type="button" style={btn.ghost()} onClick={() => void exportMarkdown()}>导出 Markdown</button>
+              <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
+              {savedAt && (
+                <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: T.textFaint }}>
+                  {autoSaved ? '已自动保存' : '已保存'} {new Date(savedAt).toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* 右栏:历史 + 文章编辑(主写作区) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
+          <Card style={{ padding: '14px 18px' }}>
+            {ready && <History currentId={task.id} refreshKey={savedAt} onLoadId={(id) => void loadById(id)} />}
+          </Card>
+
+          <Card>
+            <SectionTitle n="1" title="文章" extra={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>{[...task.markdown].length} 字</span>
+                <AiTitleButton settings={settings} title={task.title} markdown={task.markdown}
+                  onPick={(title) => setTask((t) => ({ ...t, title }))} />
+                <label style={{ ...btn.ghost(), display: 'inline-block', fontSize: 12, padding: '5px 12px' }}>
+                  导入 .md
+                  <input type="file" accept=".md,text/markdown" style={{ display: 'none' }}
+                    onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void f.text().then((txt) => applyMarkdown(txt, { deriveTitle: true })).catch(console.error); }} />
+                </label>
+              </div>
+            } />
+            <input style={{ ...field, fontSize: 17, fontWeight: 500, marginBottom: 12 }}
+              placeholder="标题(自动取自第一个 # 标题,可改)"
+              value={task.title} onChange={(e) => setTask((t) => ({ ...t, title: e.target.value }))} />
+            <div style={{ border: `1px solid ${T.border}`, borderRadius: T.radiusSm, minHeight: 460, overflow: 'hidden', background: T.card }}>
+              <RichEditor value={task.markdown} images={task.images} onChange={onEditorChange}
+                onReady={(api) => { richApiRef.current = api; }} />
+            </div>
+            {settings.snippets.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 12, color: T.textFaint }}>插入片段:</span>
+                {settings.snippets.map((s) => (
+                  <button key={s.id} type="button" onClick={() => insertSnippet(s.content)}
+                    style={{ ...btn.ghost(), padding: '4px 12px', fontSize: 12 }}>{s.name || '(未命名)'}</button>
+                ))}
+              </div>
             )}
-          </div>
-          <PlatformBar task={task} mpAccounts={settings.mpAccounts} enabled={enabledSet} onBeforeFill={save} />
-          <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.borderSoft}` }}>
-            <button type="button" style={btn.gold()} onClick={() => void save()}>保存任务</button>
-            <button type="button" style={btn.ghost()} onClick={() => void exportMarkdown()}>导出 Markdown</button>
-            <button type="button" style={btn.ghost()} onClick={() => void copyFallback()}>复制富文本(兜底)</button>
-            {savedAt && (
-              <span style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: T.textFaint }}>
-                {autoSaved ? '已自动保存' : '已保存'} {new Date(savedAt).toLocaleTimeString()}
-              </span>
-            )}
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
 
       {showSettings && (
